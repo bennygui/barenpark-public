@@ -624,12 +624,12 @@
 
 @media (min-width: 1500px) {
   .bp-supply-board-achievements {
-    order: 4;
+    order: 0;
     min-width: 520px;
   }
 }
 .bp-two-column-display .bp-supply-board-achievements {
-  order: 4;
+  order: 0;
   min-width: 520px;
 }
 

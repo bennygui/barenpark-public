@@ -549,12 +549,12 @@ $park-grid-size: 40;
     }
 
     @media (min-width: #{$two-column-width}) {
-        order: 4;
+        order: 0;
         min-width: 520px;
     }
 
     @at-root .bp-two-column-display #{&} {
-        order: 4;
+        order: 0;
         min-width: 520px;
     }
 

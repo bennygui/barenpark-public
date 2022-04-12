@@ -62,6 +62,7 @@ define([
                 this.notificationsToRegister.push(['NTF_REPLACE_PLAYER_PARK_AREA', 600]);
                 this.notificationsToRegister.push(['NTF_REPLACE_SUPPLY_BOARD_PARKS', 600]);
                 this.notificationsToRegister.push(['NTF_UPDATE_SUPPLY_SHAPES_COUNT', null]);
+                this.notificationsToRegister.push(['NTF_UPDATE_SUPPLY_ACHIEVEMENTS_COUNT', null]);
                 this.notificationsToRegister.push(['NTF_DISPLAY_LAST_TURN', null]);
                 this.notificationsToRegister.push(['NTF_MOVE_ACHIEVEMENT_TO_PLAYER', 600]);
                 this.notificationsToRegister.push(['NTF_MOVE_ACHIEVEMENT_TO_SUPPLY_BOARD', 600]);
@@ -375,7 +376,10 @@ define([
                     _('Place in park'),
                     _('Tile must have a valid position (within parks and no overlaps)'),
                     () => {
-                        this.serverAction(serverAction, this.placeTileInParkPosition);
+                        this.serverAction(serverAction, this.placeTileInParkPosition).then(() => {
+                            this.placeTileInParkPosition = null;
+                            this.placeTileInParkPositionIsValid = false;
+                        });
                     }
                 );
                 this.setTopButtonValid(this.TOP_BUTTON_PLACE_IN_PARK_ID, this.placeTileInParkPositionIsValid);
@@ -394,6 +398,7 @@ define([
                 this.playerParkMgr.addPlayerParkShapeMovement(
                     this.player_id,
                     shapeElem,
+                    this.placeTileInParkPosition,
                     neighbourPositions,
                     (parkId, x, y, rotation, flipH, flipV) => {
                         this.updatePlaceTileInParkPosition(validPositions, {
@@ -558,6 +563,9 @@ define([
             },
             notif_UpdateSupplyShapesCount(args) {
                 this.supplyBoardMgr.updateShapesViewerCounts(args.args.supplyShapesCount);
+            },
+            notif_UpdateSupplyAchievementsCount(args) {
+                this.achievementMgr.updateSupplyAchievementsCount(args.args.achievementSupplyPile, args.args.supplyAchievementsCount);
             },
 
             onStatePrivatePlacePlayerPark(args) {

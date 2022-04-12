@@ -63,10 +63,16 @@ define([
 
             updateAchievementViewerCounts(supplyAchievementCount) {
                 for (const supplyPile in supplyAchievementCount) {
-                    const button = this.getSupplyBoardAchievementViewButtonElem(supplyPile);
-                    if (button === null) continue;
-                    button.querySelector('span').innerText = supplyAchievementCount[supplyPile] + 'x';
+                    this.updateSupplyAchievementsCount(supplyPile, supplyAchievementCount[supplyPile]);
                 }
+            },
+
+            updateSupplyAchievementsCount(supplyPile, count) {
+                const button = this.getSupplyBoardAchievementViewButtonElem(supplyPile);
+                if (button === null) {
+                    return;
+                }
+                button.querySelector('span').innerText = count + 'x';
             },
 
             createAchievementElementFromAchievementId(achievementId) {

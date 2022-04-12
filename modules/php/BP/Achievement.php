@@ -445,13 +445,18 @@ class AchievementMgr extends \BX\Action\BaseActionRowMgr
         }
         return $ret;
     }
-    
+
+    public function getSupplyAchievementsCount($classId)
+    {
+        return count(array_filter($this->getAll(), fn ($a) => $a->playerId === null && get_class($a) == $classId));
+    }
+
     public function debugAssignAchievements($playerIdArray)
     {
         if (!$this->gameUsesAchievements()) {
             return;
         }
-        $achievements = array_values(array_filter($this->getAll(), fn($a) => $a->playerId === null));
+        $achievements = array_values(array_filter($this->getAll(), fn ($a) => $a->playerId === null));
         shuffle($achievements);
         foreach ($playerIdArray as $playerId) {
             if (count($achievements) == 0) {

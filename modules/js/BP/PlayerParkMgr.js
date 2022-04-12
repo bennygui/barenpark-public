@@ -171,7 +171,7 @@ define([
                 return document.querySelector('#bp-player-area-' + playerId + ' .bp-player-area-park-controls');
             },
 
-            addPlayerParkShapeMovement(playerId, shapeElem, neighbourPositions, callback, onAcceptClick) {
+            addPlayerParkShapeMovement(playerId, shapeElem, initialParkPosition, neighbourPositions, callback, onAcceptClick) {
                 const parksArea = this.getPlayerAreaElement(playerId);
                 let parkId = null
                 let rotation = 0;
@@ -179,6 +179,14 @@ define([
                 let flipV = false;
                 let x = null;
                 let y = null;
+                if (initialParkPosition !== null) {
+                    parkId = initialParkPosition.parkId;
+                    rotation = initialParkPosition.parkRotation;
+                    flipH = initialParkPosition.parkHorizontalFlip;
+                    flipV = initialParkPosition.parkVerticalFlip;
+                    x = initialParkPosition.parkTopX;
+                    y = initialParkPosition.parkTopY;
+                }
 
                 const doCallback = () => callback(parkId, x, y, this.normalizeRotation(rotation), flipH, flipV);
 

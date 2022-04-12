@@ -586,6 +586,7 @@ class GainAchievementActionCommand extends \BX\Action\BaseActionCommand
     private $gainedBearStatueCount;
     private $gainedAchievementIds;
     private $scoreActions;
+    private $undoSupplyAchievementsCount;
 
     public function __construct(int $playerId, int $gainedBearStatueCount)
     {
@@ -601,9 +602,16 @@ class GainAchievementActionCommand extends \BX\Action\BaseActionCommand
             return;
         }
         $achievementMgr = self::getMgr('achievement');
+        $this->undoSupplyAchievementsCount = [];
         $gainedAchievements = $achievementMgr->getPlayerGainedAchievements($this->playerId, $this->gainedBearStatueCount);
         foreach ($gainedAchievements as $achievement) {
+            $achievementClassId = get_class($achievement);
+            $this->undoSupplyAchievementsCount[$achievement->supplyPile] = $achievementMgr->getSupplyAchievementsCount($achievementClassId);
             $this->gainAchievement($notifier, $achievement);
+            $notifier->notifyNoMessage(NTF_UPDATE_SUPPLY_ACHIEVEMENTS_COUNT, [
+                'achievementSupplyPile' => $achievement->supplyPile,
+                'supplyAchievementsCount' => $achievementMgr->getSupplyAchievementsCount($achievementClassId),
+            ]);
         }
     }
 
@@ -615,6 +623,12 @@ class GainAchievementActionCommand extends \BX\Action\BaseActionCommand
         foreach ($this->gainedAchievementIds as $achievementId) {
             $notifier->notifyNoMessage(NTF_MOVE_ACHIEVEMENT_TO_SUPPLY_BOARD, [
                 'achievementId' => $achievementId,
+            ]);
+        }
+        foreach ($this->undoSupplyAchievementsCount as $achievementSupplyPile => $count) {
+            $notifier->notifyNoMessage(NTF_UPDATE_SUPPLY_ACHIEVEMENTS_COUNT, [
+                'achievementSupplyPile' => $achievementSupplyPile,
+                'supplyAchievementsCount' => $count,
             ]);
         }
         foreach (array_reverse($this->scoreActions) as $scoreAction) {
@@ -629,7 +643,7 @@ class GainAchievementActionCommand extends \BX\Action\BaseActionCommand
 
     public function reevaluate(?\BX\Action\BaseActionCommandNotifier $notifier, array &$args)
     {
-        // Gaining achievements scores points so we need to undo if there is a conlict
+        // Gaining achievements scores points so we need to undo if there is a conflict
         if (array_key_exists('gainedAchievementIds', $args)) {
             foreach ($args['gainedAchievementIds'] as $gainedId) {
                 foreach ($this->gainedAchievementIds as $achievementId) {
