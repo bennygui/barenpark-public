@@ -33,6 +33,7 @@ define([
             },
 
             setup(gamedatas) {
+                this.setupBrowserDetection();
                 this.setupNotifications();
             },
 
@@ -112,6 +113,26 @@ define([
                     console.error(log, args, "Exception thrown", e.stack);
                 }
                 return this.inherited(arguments);
+            },
+
+
+            setupBrowserDetection() {
+                if (!navigator) {
+                    return;
+                }
+                if (
+                    (
+                        navigator.platform
+                        && /iPad|iPhone|iPod/.test(navigator.platform)
+                    )
+                    ||
+                    (
+                        /iPad|iPhone|iPod/.test(navigator.userAgent)
+                        && !window.MSStream
+                    )
+                ) {
+                    document.body.classList.add('bx-browser-is-ios');
+                }
             },
 
             getHtmlTextForLogArg(key, value) {
