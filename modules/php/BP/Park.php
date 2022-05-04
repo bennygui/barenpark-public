@@ -16,6 +16,7 @@ require_once(__DIR__ . '/../BX/Action.php');
 require_once('Shape.php');
 
 const PARK_SIZE = 4;
+const EXTRA_PLACEMENT_SIZE = 3;
 const PARK_COUNT_WITH_ENTRANCE = 4;
 const PARK_COUNT_WITHOUT_ENTRANCE = 16 - PARK_COUNT_WITH_ENTRANCE;
 const PARK_NB_PILE = 2;
@@ -336,12 +337,16 @@ class ParkShapeValidityArgs
 
     public $overlappedIcons;
     public $filledParkCount;
+    public $shapeArray;
+    public $isValid;
 
     public function __construct(?ParkShapeValidityArgs $args = null)
     {
         $this->validateAdjacency = true;
         $this->allowBearStatueOverlap = false;
         $this->overlappedIcons = [];
+        $this->shapeArray = null;
+        $this->isValid = null;
         if ($args !== null) {
             $this->playerId = $args->playerId;
             $this->shapeId = $args->shapeId;
@@ -355,6 +360,7 @@ class ParkShapeValidityArgs
             $this->isPitVariantActive = $args->isPitVariantActive;
             $this->isLastTurn = $args->isLastTurn;
             $this->allowBearStatueOverlap = $args->allowBearStatueOverlap;
+            $this->shapeArray = $args->shapeArray;
         }
     }
 
@@ -445,6 +451,11 @@ class ParkShapeValidityArgs
         $this->isPitVariantActive();
         $this->isLastTurn();
     }
+
+    public function shapeArrayKey()
+    {
+        return json_encode($this->shapeArray);
+    }
 }
 
 class ParkGrid
@@ -534,8 +545,13 @@ class GlobalPlayerPark
         // For performance
         $args->fillCache();
         foreach (array_keys($this->parkGrid) as $parkId) {
-            foreach (range(0, PARK_SIZE - 1) as $x) {
+            $startX = 0;
+            if ($this->parkNeedsExtraPlacement($parkId)) {
+                $startX = -1 * $shape->getShapeExtraPlacementSize();
+            }
+            foreach (range($startX, PARK_SIZE - 1) as $x) {
                 foreach (range(0, PARK_SIZE - 1) as $y) {
+                    $checkedArgs = [];
                     foreach (VALID_ROTATIONS as $rotation) {
                         foreach ([true, false] as $flipH) {
                             foreach ([true, false] as $flipV) {
@@ -546,7 +562,9 @@ class GlobalPlayerPark
                                     ->setParkRotation($rotation)
                                     ->setParkHorizontalFlip($flipH)
                                     ->setParkVerticalFlip($flipV);
-                                if ($this->isShapePositionValid($isValidArgs)) {
+                                $isPosValid = $this->isShapePositionValid($isValidArgs, $checkedArgs);
+                                $checkedArgs[$isValidArgs->shapeArrayKey()] = $isValidArgs;
+                                if ($isPosValid) {
                                     $statueShapeIds = [];
                                     foreach ($statueShapes as $statue) {
                                         if (count($statueShapeIds) >= $isValidArgs->filledParkCount) {
@@ -578,7 +596,11 @@ class GlobalPlayerPark
     public function getNeighbourPositions()
     {
         $positions = [];
+        $extraPlacementParkId = null;
         foreach (array_keys($this->parkGrid) as $parkId) {
+            if ($this->parkNeedsExtraPlacement($parkId)) {
+                $extraPlacementParkId = $parkId;
+            }
             $positions[$parkId] = [];
             foreach (range(0, PARK_SIZE - 1) as $x) {
                 $positions[$parkId][$x] = [];
@@ -590,10 +612,59 @@ class GlobalPlayerPark
                 }
             }
         }
+        if ($extraPlacementParkId !== null) {
+            // Extra grid
+            foreach (range(-1 * EXTRA_PLACEMENT_SIZE, -1) as $x) {
+                $positions[$extraPlacementParkId][$x] = [];
+                foreach (range(0, PARK_SIZE - 1) as $y) {
+                    $positions[$extraPlacementParkId][$x][$y]['up'] = $this->getParkGridAt($extraPlacementParkId, $x, $y - 1);
+                    if ($positions[$extraPlacementParkId][$x][$y]['up'] === null && ($y - 1) >= 0) {
+                        $positions[$extraPlacementParkId][$x][$y]['up'] = new ParkGrid($extraPlacementParkId, $x, $y - 1);
+                    }
+                    $positions[$extraPlacementParkId][$x][$y]['down'] = $this->getParkGridAt($extraPlacementParkId, $x, $y + 1);
+                    if ($positions[$extraPlacementParkId][$x][$y]['down'] === null) {
+                        $positions[$extraPlacementParkId][$x][$y]['down'] = new ParkGrid($extraPlacementParkId, $x, $y + 1);
+                    }
+                    $positions[$extraPlacementParkId][$x][$y]['left'] = $this->getParkGridAt($extraPlacementParkId, $x - 1, $y);
+                    if ($positions[$extraPlacementParkId][$x][$y]['left'] === null && ($x - 1) >= -1 * EXTRA_PLACEMENT_SIZE) {
+                        $positions[$extraPlacementParkId][$x][$y]['left'] = new ParkGrid($extraPlacementParkId, $x - 1, $y);
+                    }
+                    $positions[$extraPlacementParkId][$x][$y]['right'] = $this->getParkGridAt($extraPlacementParkId, $x + 1, $y);
+                    if ($positions[$extraPlacementParkId][$x][$y]['right'] === null) {
+                        $positions[$extraPlacementParkId][$x][$y]['right'] = new ParkGrid($extraPlacementParkId, $x + 1, $y);
+                    }
+                }
+            }
+            // From right park to extra grid
+            foreach (range(0, PARK_SIZE - 1) as $y) {
+                $positions[$extraPlacementParkId][0][$y]['left'] = new ParkGrid($extraPlacementParkId, -1, $y);
+            }
+            // From down park to extra grid 
+            $downParkId = $this->getParkGridAt($parkId, -1, PARK_SIZE)->parkId;
+            foreach (range(PARK_SIZE - EXTRA_PLACEMENT_SIZE, PARK_SIZE - 1) as $x) {
+                $positions[$downParkId][$x][0]['up'] = new ParkGrid($extraPlacementParkId, $x - PARK_SIZE, PARK_SIZE - 1);
+            }
+        }
         return $positions;
     }
 
-    public function isShapePositionValid(ParkShapeValidityArgs &$args)
+    private function parkNeedsExtraPlacement($parkId)
+    {
+        // Detect this park shape:
+        //     __
+        //  __|__|<-- This one
+        // |__|__|
+        if (
+            $this->getParkGridAt($parkId, 0, PARK_SIZE) !== null
+            && $this->getParkGridAt($parkId, -1, PARK_SIZE) !== null
+            && $this->getParkGridAt($parkId, -1, PARK_SIZE - 1) === null
+        ) {
+            return true;
+        }
+        return false;
+    }
+
+    public function isShapePositionValid(ParkShapeValidityArgs &$args, array $checkedArgs = [])
     {
         $args->filledParkCount = 0;
         $shapeMgr = \BX\Action\ActionRowMgrRegister::getMgr('shape');
@@ -601,7 +672,16 @@ class GlobalPlayerPark
         if ($shape === null) {
             throw new \BgaSystemException("shapeId {$args->shapeId} does not exist");
         }
-        $shapeArray = $shape->getShapeArray($args->parkRotation, $args->parkHorizontalFlip, $args->parkVerticalFlip);
+        $args->shapeArray = $shape->getShapeArray($args->parkRotation, $args->parkHorizontalFlip, $args->parkVerticalFlip);
+        if (count($checkedArgs) > 0) {
+            $shapeArrayKey = $args->shapeArrayKey();
+            if (array_key_exists($shapeArrayKey, $checkedArgs)) {
+                $args->overlappedIcons = $checkedArgs[$shapeArrayKey]->overlappedIcons;
+                $args->filledParkCount = $checkedArgs[$shapeArrayKey]->filledParkCount;
+                $args->isValid = $checkedArgs[$shapeArrayKey]->isValid;
+                return $args->isValid;
+            }
+        }
         $valid = true;
         $emptyValid = false;
         if (!$this->hasShapes) {
@@ -612,7 +692,7 @@ class GlobalPlayerPark
         $shapeCoveredGrids = 0;
         $coversAtLeastOneEmptyBearStatue = false;
         $this->foreachGrid(
-            $shapeArray,
+            $args->shapeArray,
             $args->parkId,
             $args->parkTopX,
             $args->parkTopY,
@@ -688,7 +768,8 @@ class GlobalPlayerPark
                 }
             }
         }
-        return ($valid && $emptyValid);
+        $args->isValid = ($valid && $emptyValid);
+        return $args->isValid;
     }
 
     public function getShapeOverlappedIcons($shapeId)

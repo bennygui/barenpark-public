@@ -124,14 +124,18 @@ class RowMgr
 
     public function __construct(string $tableName, string $baseRowClassName)
     {
-        $this->db = new class extends \APP_DbObject {
-            public function executeQuery(string $sql) {
+        $this->db = new class extends \APP_DbObject
+        {
+            public function executeQuery(string $sql)
+            {
                 return $this->DBQuery($sql);
             }
-            public function executeSelect(string $sql) {
+            public function executeSelect(string $sql)
+            {
                 return $this->getObjectListFromDB($sql);
             }
-            public function executeGetLastId() {
+            public function executeGetLastId()
+            {
                 return $this->DbGetLastId();
             }
         };
@@ -232,17 +236,7 @@ class RowMgr
 
         $sql = "SELECT $dbColumns FROM {$this->tableName} $orderBy";
         foreach ($this->executeSelect($sql) as $row) {
-            $classId = $this->baseRowClassName;
-            $colClassId = $this->getColumnClassId();
-            if ($colClassId !== null) {
-                $classId = $row[$colClassId->column()];
-            }
-            $rowClass = new $classId;
-            foreach ($row as $column => $value) {
-                $property = ColumnProperty::columnNameToProperty($column);
-                $rowClass->$property = $value;
-            }
-            $allRows[] = $rowClass;
+            $allRows[] = $this->rowToClass($row);
         }
         return $allRows;
     }
@@ -262,10 +256,20 @@ class RowMgr
 
     public function getRowByKey($key)
     {
-        // Custom SELECT for performance?
-        $rows = $this->getAllRowsByKey();
-        if (array_key_exists($key, $rows)) {
-            return $rows[$key];
+        $columnKeys = $this->getColumnKeys();
+        if (count($columnKeys) != 1) {
+            throw new \BgaSystemException("getRowByKey requires exactly 1 key column");
+        }
+        $dbKey = $columnKeys[0]->column() . " = " . self::sqlNullOrValue($key);
+
+        $columns = $this->getColumns();
+        $dbColumns = implode(',', array_map(function ($c) {
+            return $c->column();
+        }, $columns));
+
+        $sql = "SELECT $dbColumns FROM {$this->tableName} WHERE $dbKey";
+        foreach ($this->executeSelect($sql) as $row) {
+            return $this->rowToClass($row);
         }
         return null;
     }
@@ -343,6 +347,21 @@ class RowMgr
     public function executeGetLastId()
     {
         return $this->db->executeGetLastId();
+    }
+
+    private function rowToClass($row)
+    {
+        $classId = $this->baseRowClassName;
+        $colClassId = $this->getColumnClassId();
+        if ($colClassId !== null) {
+            $classId = $row[$colClassId->column()];
+        }
+        $rowClass = new $classId;
+        foreach ($row as $column => $value) {
+            $property = ColumnProperty::columnNameToProperty($column);
+            $rowClass->$property = $value;
+        }
+        return $rowClass;
     }
 
     public static function sqlNullOrValue($value)

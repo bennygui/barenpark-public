@@ -53,6 +53,19 @@ trait GameStatesTrait
         $this->gamestate->nextState('nextPlayer');
     }
 
+    public function passTurn()
+    {
+        $playerId = $this->getCurrentPlayerId();
+        \BX\Action\ActionCommandMgr::apply($playerId);
+        $this->privateStateCheckAction($playerId, 'passTurn', \BX\PrivateState\PLAYER_ACTIVE_STATUS_ACTIVE);
+
+        $this->updateLastMove($playerId);
+        \BX\Action\ActionRowMgrRegister::getMgr('private_state')->clearPlayerState($playerId);
+        $this->giveExtraTime($playerId);
+
+        $this->gamestate->nextState('nextPlayer');
+    }
+
     private function notifyReplaceSupplyBoardParks($playerId)
     {
         $notifier = new \BX\Action\ActionCommandNotifierPublic($playerId);

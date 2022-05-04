@@ -130,6 +130,11 @@ define([
                         /iPad|iPhone|iPod/.test(navigator.userAgent)
                         && !window.MSStream
                     )
+                    ||
+                    (
+                        // Also include Safari on MacOS
+                        /^((?!chrome|android).)*safari/i.test(navigator.userAgent)
+                    )
                 ) {
                     document.body.classList.add('bx-browser-is-ios');
                 }

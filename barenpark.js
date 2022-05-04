@@ -42,14 +42,22 @@ define([
             SHAPE_LOCATION_ID_PLAYER_SUPPLY: 1,
             SHAPE_LOCATION_ID_PLAYER_PARK: 2,
 
-            GRID_SIZE: 40,
+            GRID_SIZE: 80,
 
             PREF_COLUMN_DISPLAY_ID: 'PREF_COLUMN_DISPLAY_ID',
             PREF_COLUMN_DISPLAY_VALUE_ADAPT: 'c-adapt',
             PREF_COLUMN_DISPLAY_VALUE_1_COLUMN: 'c-1',
             PREF_COLUMN_DISPLAY_VALUE_2_COLUMN: 'c-2',
 
+            PREF_ZOOM_FACTOR_ID: 'PREF_ZOOM_FACTOR_ID',
+            PREF_ZOOM_FACTOR_DEFAULT_VALUE: 2,
+
+            PREF_SHOW_SHAPE_GRID_ID: 'PREF_SHOW_SHAPE_GRID_ID',
+            PREF_SHOW_SHAPE_GRID_DEFAULT_VALUE: false,
+
             constructor() {
+                this.zoomFactor = this.PREF_ZOOM_FACTOR_DEFAULT_VALUE;
+
                 this.PREF_COLUMN_DISPLAY_VALUES = [
                     this.PREF_COLUMN_DISPLAY_VALUE_ADAPT,
                     this.PREF_COLUMN_DISPLAY_VALUE_1_COLUMN,
@@ -73,6 +81,8 @@ define([
                 prefColDesc[this.PREF_COLUMN_DISPLAY_VALUE_1_COLUMN] = _('Force to display in one column: supply board at the top and then the player parks.');
                 prefColDesc[this.PREF_COLUMN_DISPLAY_VALUE_2_COLUMN] = _('Force to display in two columns: supply board on the right and player parks on the left.');
                 this.localPreferenceToRegister.push([this.PREF_COLUMN_DISPLAY_ID, this.PREF_COLUMN_DISPLAY_VALUE_ADAPT, prefColDesc]);
+                this.localPreferenceToRegister.push([this.PREF_ZOOM_FACTOR_ID, this.PREF_ZOOM_FACTOR_DEFAULT_VALUE, {}]);
+                this.localPreferenceToRegister.push([this.PREF_SHOW_SHAPE_GRID_ID, this.PREF_SHOW_SHAPE_GRID_DEFAULT_VALUE, {}]);
 
                 this.htmlTextForLogKeys.push('shapeImage');
                 this.htmlTextForLogKeys.push('parkImage');
@@ -94,6 +104,8 @@ define([
 
                 this.placeTileInParkPosition = null;
                 this.placeTileInParkPositionIsValid = false;
+
+                dojo.connect(window, "onresize", this, () => this.setZoomFactor(this.zoomFactor));
             },
 
             setup(gamedatas) {
@@ -121,35 +133,111 @@ define([
                     const playerId = playerIdArray[playerOrder];
                     const playerBoardElem = document.getElementById('player_board_' + playerId);
 
-                    const columnElem = document.createElement('div');
-                    columnElem.classList.add('bp-player-panel-columns');
-                    playerBoardElem.appendChild(columnElem);
-
                     // Show player order
                     const playerOrderElem = document.createElement('div');
                     playerOrderElem.dataset.playerOrder = (parseInt(playerOrder) + 1);
                     playerOrderElem.classList.add(playerOrderClass);
-                    columnElem.appendChild(playerOrderElem);
-
-                    if (playerId == this.player_id) {
-                        // Preference for 1 or 2 columns
-                        for (const prefValue of this.PREF_COLUMN_DISPLAY_VALUES) {
-                            const elem = document.createElement('div');
-                            elem.id = 'bp-player-panel-columns-' + prefValue;
-                            elem.classList.add('bp-icon-column', prefValue);
-                            columnElem.appendChild(elem);
-                            dojo.connect(elem, 'onclick', () => {
-                                this.setLocalPreference(this.PREF_COLUMN_DISPLAY_ID, prefValue);
-                            });
-                            this.addTooltip(
-                                elem.id,
-                                this.getLocalPreferenceValueDescription(this.PREF_COLUMN_DISPLAY_ID, prefValue),
-                                ''
-                            );
-                        }
-                    }
+                    playerBoardElem.appendChild(playerOrderElem);
                 }
                 this.addTooltipToClass(playerOrderClass, _('Player order'), '');
+
+                const playerPanelContainer = document.getElementById('player_boards');
+                const displayOptionsPanel = document.createElement('div');
+                displayOptionsPanel.classList.add('player-board');
+                playerPanelContainer.appendChild(displayOptionsPanel);
+
+                const columnDescription = document.createElement('div');
+                columnDescription.classList.add('bp-player-panel-column-description');
+                columnDescription.innerText = _('Display in columns');
+                displayOptionsPanel.appendChild(columnDescription);
+
+                // Preference for 1 or 2 columns
+                const columnElem = document.createElement('div');
+                columnElem.classList.add('bp-player-panel-columns');
+                displayOptionsPanel.appendChild(columnElem);
+                for (const prefValue of this.PREF_COLUMN_DISPLAY_VALUES) {
+                    const elem = document.createElement('div');
+                    elem.id = 'bp-player-panel-columns-' + prefValue;
+                    elem.classList.add('bp-icon-column', prefValue);
+                    columnElem.appendChild(elem);
+                    dojo.connect(elem, 'onclick', () => {
+                        this.setLocalPreference(this.PREF_COLUMN_DISPLAY_ID, prefValue);
+                    });
+                    this.addTooltip(
+                        elem.id,
+                        this.getLocalPreferenceValueDescription(this.PREF_COLUMN_DISPLAY_ID, prefValue),
+                        ''
+                    );
+                }
+
+                // Preference for zoom factor
+                const zoomDescription = document.createElement('div');
+                zoomDescription.classList.add('bp-player-panel-column-description');
+                zoomDescription.innerText = _('Zoom (use 2 columns to zoom more)');
+                displayOptionsPanel.appendChild(zoomDescription);
+
+                const sliderElem = document.createElement('input');
+                sliderElem.id = 'bp-player-panel-zoom-slider';
+                sliderElem.classList.add('bp-player-panel-zoom');
+                sliderElem.type = 'range';
+                sliderElem.min = '0';
+                sliderElem.max = '10';
+                sliderElem.value = '0';
+                sliderElem.addEventListener('input', (e) => {
+                    const zoom = (2 - (parseInt(sliderElem.value) / 10));
+                    this.setLocalPreference(this.PREF_ZOOM_FACTOR_ID, zoom);
+                });
+                displayOptionsPanel.appendChild(sliderElem);
+                this.addTooltip(
+                    sliderElem.id,
+                    _('Zoom tiles. If your display is too small, you can force to display in two columns to zoom more.'),
+                    ''
+                );
+
+                // Preference for show grid
+                const showGridLabel = document.createElement('label');
+                showGridLabel.classList.add('bp-player-panel-column-description');
+
+                const showGridElem = document.createElement('input');
+                showGridElem.id = 'bp-player-panel-show-grid-checkbox';
+                showGridElem.type = 'checkbox';
+                showGridElem.addEventListener('change', (e) => {
+                    this.setLocalPreference(this.PREF_SHOW_SHAPE_GRID_ID, showGridElem.checked);
+                });
+                showGridLabel.appendChild(showGridElem);
+
+                const showGridLabelText = document.createElement('span');
+                showGridLabelText.innerText = ' ' + _('Show tile grid');
+                showGridLabel.appendChild(showGridLabelText);
+
+                displayOptionsPanel.appendChild(showGridLabel);
+            },
+
+            getGridSize() {
+                return this.GRID_SIZE / this.zoomFactor;
+            },
+
+            setZoomFactor(zoomFactor) {
+                if (zoomFactor > 2) {
+                    zoomFactor = 2;
+                }
+                this.zoomFactor = zoomFactor;
+                document.body.style.setProperty('--bp-zoom-factor', this.zoomFactor);
+                if (zoomFactor < 2) {
+                    const maxWidth = document.getElementById('bp-area-full').offsetWidth;
+                    const boardWidth = document.querySelector('.bp-shape-supply-board-wrap').offsetWidth;
+                    if (boardWidth > maxWidth) {
+                        this.setZoomFactor(zoomFactor + 0.1);
+                        return;
+                    }
+                }
+                const sliderElem = document.getElementById('bp-player-panel-zoom-slider');
+                if (sliderElem !== null) {
+                    sliderElem.value = 20 - (zoomFactor * 10);
+                }
+                for (const playerId in this.gamedatas.players) {
+                    this.playerParkMgr.resizePlayerArea(playerId)
+                }
             },
 
             getElementCreationElement() {
@@ -177,6 +265,20 @@ define([
                         const elem = document.querySelector('.bp-player-panel-columns .bp-icon-column.' + value);
                         if (elem !== null) {
                             elem.classList.add('selected');
+                        }
+                        this.setZoomFactor(this.zoomFactor);
+                        break;
+                    case this.PREF_ZOOM_FACTOR_ID:
+                        this.setZoomFactor(value);
+                        break;
+                    case this.PREF_SHOW_SHAPE_GRID_ID:
+                        const showGridCheckbox = document.getElementById('bp-player-panel-show-grid-checkbox');
+                        if (value === "true" || value === true) {
+                            document.body.classList.add('bp-show-shape-grid');
+                            showGridCheckbox.checked = true;
+                        } else {
+                            document.body.classList.remove('bp-show-shape-grid');
+                            showGridCheckbox.checked = false;
                         }
                         break;
                 }
@@ -207,6 +309,7 @@ define([
                 this.removeAllCurrentTurnIndicator();
                 this.playerParkMgr.removePlayerPlacementPark(this.player_id);
                 this.playerParkMgr.hideParkControls(this.player_id);
+                this.playerParkMgr.removeHoverShape();
             },
 
             onStateChangedAfter(stateName, args) {
@@ -263,12 +366,16 @@ define([
 
             hideHasUndoAction() {
                 const elem = document.querySelector('#bp-player-area-' + this.player_id + ' .bp-has-undo-action-title');
-                elem.classList.add('bx-hidden');
+                if (elem !== null) {
+                    elem.classList.add('bx-hidden');
+                }
             },
 
             showHasUndoAction() {
                 const elem = document.querySelector('#bp-player-area-' + this.player_id + ' .bp-has-undo-action-title');
-                elem.classList.remove('bx-hidden');
+                if (elem !== null) {
+                    elem.classList.remove('bx-hidden');
+                }
             },
 
             hideModeTitle() {
@@ -310,6 +417,9 @@ define([
 
             onButtonsStatePrivateInactiveTurn(args) {
                 debug('onButtonsStatePrivateInactiveTurn');
+                if (args.playerParksAreFull) {
+                    return;
+                }
                 this.addTopButtonSecondary(
                     'bp-button-enter-play-loop',
                     _('Prepare next turn'),
@@ -374,7 +484,7 @@ define([
                 this.addTopButtonPrimaryWithValid(
                     this.TOP_BUTTON_PLACE_IN_PARK_ID,
                     _('Place in park'),
-                    _('Tile must have a valid position (within parks and no overlaps)'),
+                    _('Tile must have a valid position (within parks, no overlaps, orthogonally adjacent to other tiles)'),
                     () => {
                         this.serverAction(serverAction, this.placeTileInParkPosition).then(() => {
                             this.placeTileInParkPosition = null;
@@ -400,6 +510,7 @@ define([
                     shapeElem,
                     this.placeTileInParkPosition,
                     neighbourPositions,
+                    new Set(Object.values(validPositions).filter((s) => s.parkTopX < 0).map((s) => s.parkId)),
                     (parkId, x, y, rotation, flipH, flipV) => {
                         this.updatePlaceTileInParkPosition(validPositions, {
                             parkId: parkId,
@@ -418,8 +529,16 @@ define([
                     }
                 );
             },
+            positionToKey(position) {
+                return position.parkId + '|' +
+                    position.parkTopX + '|' +
+                    position.parkTopY + '|' +
+                    position.parkRotation + '|' +
+                    position.parkHorizontalFlip + '|' +
+                    position.parkVerticalFlip;
+            },
             uiStringToValidPositions(validPositions) {
-                const ret = [];
+                const ret = {};
                 if (validPositions.length == 0) {
                     return ret;
                 }
@@ -443,7 +562,7 @@ define([
                         throw new Error('Unknown icon: ' + icon);
                     });
                     const statueShapeIds = parts[8].length == 0 ? [] : parts[8].split(',');
-                    ret.push({
+                    const pos = {
                         shapeId: shapeId,
                         parkId: parkId,
                         parkTopX: parkTopX,
@@ -453,7 +572,8 @@ define([
                         parkVerticalFlip: parkVerticalFlip,
                         overlappedIcons: overlappedIcons,
                         statueShapeIds: statueShapeIds,
-                    });
+                    };
+                    ret[this.positionToKey(pos)] = pos;
                 }
                 return ret;
             },
@@ -507,18 +627,10 @@ define([
                 Object.assign(this.placeTileInParkPosition, newPosition);
                 let validPosition = null;
                 this.placeTileInParkPositionIsValid = false;
-                for (const pos of validPositions) {
+                const posKey = this.positionToKey(this.placeTileInParkPosition);
+                if (posKey in validPositions) {
+                    validPosition = validPositions[posKey];
                     this.placeTileInParkPositionIsValid = true;
-                    for (const key in this.placeTileInParkPosition) {
-                        if (this.placeTileInParkPosition[key] != pos[key]) {
-                            this.placeTileInParkPositionIsValid = false;
-                            break;
-                        }
-                    }
-                    if (this.placeTileInParkPositionIsValid) {
-                        validPosition = pos;
-                        break;
-                    }
                 }
                 this.setTopButtonValid(this.TOP_BUTTON_PLACE_IN_PARK_ID, this.placeTileInParkPositionIsValid);
                 this.playerParkMgr.setShapeMovementValid(this.player_id, this.placeTileInParkPositionIsValid, validPosition);
@@ -555,9 +667,7 @@ define([
                         }, {
                         outline: true,
                         border: false,
-                        isTransparentFct: (x, y) => {
-                            return this.shapeMgr.isShapeTransparentAtPos(shapeId, x, y);
-                        },
+                        childEventSelector: '.bp-grid-event',
                     });
                 }
             },
@@ -609,6 +719,16 @@ define([
                         'bp-button-confirm-turn',
                         _('Confirm Turn'),
                         () => this.serverAction('confirmTurn')
+                    );
+                }
+            },
+
+            onButtonsStatePrivatePassTurnNoShape(args) {
+                if (this.isCurrentPlayerActive()) {
+                    this.addTopButtonImportant(
+                        'bp-button-pass-turn',
+                        _('Pass'),
+                        () => this.serverAction('passTurn')
                     );
                 }
             },

@@ -76,7 +76,7 @@ class action_barenpark extends APP_GameAction
   {
     self::setAjaxMode();
     $parkId = self::getArg("parkId", AT_posint, true);
-    $parkTopX = self::getArg("parkTopX", AT_posint, true);
+    $parkTopX = self::getArg("parkTopX", AT_int, true);
     $parkTopY = self::getArg("parkTopY", AT_posint, true);
     $parkRotation = self::getArg("parkRotation", AT_enum, true, null, VALID_ROTATIONS);
     $parkHorizontalFlip = self::getArg("parkHorizontalFlip", AT_bool, true);
@@ -161,6 +161,15 @@ class action_barenpark extends APP_GameAction
     self::ajaxResponse();
   }
 
+  public function passTurn()
+  {
+    self::setAjaxMode();
+
+    $this->game->passTurn();
+
+    self::ajaxResponse();
+  }
+
   public function enterTryMode()
   {
     self::setAjaxMode();
@@ -199,7 +208,7 @@ class action_barenpark extends APP_GameAction
   {
     self::setAjaxMode();
     $parkId = self::getArg("parkId", AT_posint, true);
-    $parkTopX = self::getArg("parkTopX", AT_posint, true);
+    $parkTopX = self::getArg("parkTopX", AT_int, true);
     $parkTopY = self::getArg("parkTopY", AT_posint, true);
     $parkRotation = self::getArg("parkRotation", AT_enum, true, null, VALID_ROTATIONS);
     $parkHorizontalFlip = self::getArg("parkHorizontalFlip", AT_bool, true);

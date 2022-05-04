@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS `shape` (
   -- on which park the shape is located, null if location is not player park
   `park_id` smallint(5) unsigned NULL,
   -- top corner in the park, null if location is not park
-  `park_top_x` smallint(5) unsigned NULL,
+  `park_top_x` smallint(5) NULL,
   -- top corner in the park, null if location is not park
   `park_top_y` smallint(5) unsigned NULL,
   -- rotation (0, 90, 180, 270) in the park, null if location is not park

@@ -21,7 +21,7 @@ define([
                 const config = Object.assign({
                     border: true,
                     outline: false,
-                    isTransparentFct: null,
+                    childEventSelector: null,
                 }, options);
 
                 element.classList.add('bx-clickable');
@@ -31,26 +31,12 @@ define([
                 if (config.outline) {
                     element.classList.add('bx-outline');
                 }
-                if (config.isTransparentFct === null) {
+                if (config.childEventSelector === null) {
                     this.connect(element, 'onclick', callback);
                 } else {
-                    this.connect(element, 'onclick', (event) => {
-                        const x = event.offsetX;
-                        const y = event.offsetY;
-                        if (!('fromIsTransparentFctBX' in event) && config.isTransparentFct(x, y, event, element)) {
-                            const prevPointerEvenets = element.style.pointerEvents;
-                            element.style.pointerEvents = 'none';
-                            const underElement = document.elementFromPoint(event.clientX, event.clientY);
-                            if (underElement !== null && underElement != element) {
-                                const newEvent = new MouseEvent('click');
-                                newEvent.fromIsTransparentFctBX = true;
-                                underElement.dispatchEvent(newEvent);
-                            }
-                            element.style.pointerEvents = prevPointerEvenets;
-                        } else {
-                            callback();
-                        }
-                    });
+                    for (const child of element.querySelectorAll(config.childEventSelector)) {
+                        this.connect(child, 'onclick', callback);
+                    }
                 }
             },
             removeAllClickable() {

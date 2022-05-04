@@ -69,11 +69,16 @@ trait GameStatesTrait
     public function stChooseMainEnterState($playerId)
     {
         \BX\Action\ActionCommandMgr::clear();
+        $shapeMgr = \BX\Action\ActionRowMgrRegister::getMgr('shape');
         if (!$this->playerCanPlaceShapes($playerId)) {
-            return STATE_PRIVATE_PASS_TURN_CHOOSE_FROM_SUPPLY_BOARD_ID;
+            if ($shapeMgr->supplyBoardHasGreenShapes()) {
+                return STATE_PRIVATE_PASS_TURN_CHOOSE_FROM_SUPPLY_BOARD_ID;
+            } else {
+                return STATE_PRIVATE_PASS_TURN_NO_SHAPE_ID;
+            }
         }
         // Only one shape, select it
-        if (count(\BX\Action\ActionRowMgrRegister::getMgr('shape')->getPlayerSupplyShapes($playerId)) == 1) {
+        if (count($shapeMgr->getPlayerSupplyShapes($playerId)) == 1) {
             return STATE_PRIVATE_PLACE_TILE_IN_PARK_ID;
         }
         return STATE_PRIVATE_CHOOSE_TILE_FROM_PLAYER_SUPPLY_ID;
@@ -110,8 +115,10 @@ trait GameStatesTrait
             $currentTurnAchievementIds = array_merge($currentTurnAchievementIds, $action->getGainedAchievementIds());
         }
 
+        $parkMgr = \BX\Action\ActionRowMgrRegister::getMgr('park');
         return [
             'isInPrepareMode' => ($enterPlayLoopAction !== null),
+            'playerParksAreFull' => $parkMgr->playerParksAreFull($playerId),
             'isInTryMode' => ($enterTryModeAction !== null),
             'currentTurnShapeIds' => $currentTurnShapeIds,
             'currentTurnParkIds' => $currentTurnParkIds,
@@ -154,7 +161,8 @@ trait GameStatesTrait
             ];
             foreach ($shapeMgr->getPlayerParkShapes($playerId) as $shape) {
                 foreach (array_keys($shapeScores) as $baseClassId) {
-                    if (is_subclass_of(get_class($shape), $baseClassId)) {
+                    $shapeClassId = get_class($shape);
+                    if ($shapeClassId == $baseClassId || is_subclass_of($shapeClassId, $baseClassId)) {
                         $shapeScores[$baseClassId][] = $shape->shapeScore;
                         break;
                     }

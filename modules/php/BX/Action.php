@@ -194,6 +194,11 @@ abstract class BaseActionCommand
         return REEVALUATE_NO_CHANGE;
     }
 
+    public function reevaluateReverseMustUndo($hasDelete, $hasUndo)
+    {
+        return false;
+    }
+
     public function getReevaluationArgs()
     {
         return [];
@@ -268,6 +273,16 @@ class GroupActionCommand extends BaseActionCommand
         }
         sort($combinedEval);
         return $combinedEval[0];
+    }
+
+    public function reevaluateReverseMustUndo($hasDelete, $hasUndo)
+    {
+        foreach ($this->actions as $action) {
+            if ($action->reevaluateReverseMustUndo($hasDelete, $hasUndo)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public function getReevaluationArgs()
@@ -826,6 +841,21 @@ class ActionCommandMgr
                     break;
                 default:
                     throw new \BgaSystemException("Reevaluate returned unknown eval: $eval");
+            }
+        }
+        foreach (array_reverse($actionCommands) as $revIdx => $row) {
+            $actionCommand = $row->getAction();
+            if ($actionCommand->getPlayerId() != $playerId) {
+                continue;
+            }
+            $mustUndo = $actionCommand->reevaluateReverseMustUndo($hasReevaluteDelete, $lastUndoIdx !== null);
+            if ($mustUndo) {
+                $isSilent = false;
+                $mustReevaluate = true;
+                $idx = count($actionCommands) - $revIdx - 1;
+                if ($lastUndoIdx === null || $idx > $lastUndoIdx) {
+                    $lastUndoIdx = $idx;
+                }
             }
         }
         unset($args['isLastAction']);

@@ -228,29 +228,10 @@ class barenpark extends Table
     */
     function upgradeTableDb($from_version)
     {
-        // $from_version is the current version of this game database, in numerical form.
-        // For example, if the game was running with a release of your game named "140430-1345",
-        // $from_version is equal to 1404301345
-
-        // Example:
-        //        if( $from_version <= 1404301345 )
-        //        {
-        //            // ! important ! Use DBPREFIX_<table_name> for all tables
-        //
-        //            $sql = "ALTER TABLE DBPREFIX_xxxxxxx ....";
-        //            self::applyDbUpgradeToAllDB( $sql );
-        //        }
-        //        if( $from_version <= 1405061421 )
-        //        {
-        //            // ! important ! Use DBPREFIX_<table_name> for all tables
-        //
-        //            $sql = "CREATE TABLE DBPREFIX_xxxxxxx ....";
-        //            self::applyDbUpgradeToAllDB( $sql );
-        //        }
-        //        // Please add your future database scheme changes here
-        //
-        //
-
+        if ($from_version <= 2204291308) {
+            $sql = "ALTER TABLE `shape` MODIFY `park_top_x` smallint(5) NULL;";
+            self::applyDbUpgradeToAllDB($sql);
+        }
 
     }
 }

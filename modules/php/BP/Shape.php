@@ -129,6 +129,16 @@ abstract class ShapeBase extends \BX\Action\BaseActionRow
         return $shapeArray;
     }
 
+    public function getShapeExtraPlacementSize()
+    {
+        $width = count(static::SHAPE_ARRAY[0]);
+        $height = count(static::SHAPE_ARRAY);
+        if ($width <= 1 || $height <= 1) {
+            return 0;
+        }
+        return (max($width, $height) - 1);
+    }
+
     private function rotateArray90($shapeArray)
     {
         return array_map(
@@ -773,9 +783,24 @@ class ShapeMgr extends \BX\Action\BaseActionRowMgr
         return $max + 1;
     }
 
+    public function isGeneratedShapeId(int $shapeId)
+    {
+        return ($shapeId >= self::BASE_NEW_SHAPE_ID);
+    }
+
     public function supplyBoardHasShapes()
     {
-        return count(array_filter($this->getAll(), fn($shape) => $shape->isOnSupplyBoard())) > 0;
+        return count(array_filter($this->getAll(), fn ($shape) => $shape->isOnSupplyBoard())) > 0;
+    }
+
+    public function supplyBoardHasGreenShapes()
+    {
+        return count(array_filter(
+            $this->getAll(),
+            fn ($shape) =>
+            $shape->isOnSupplyBoard()
+                && is_subclass_of(get_class($shape), ShapeGreenBase::class)
+        )) > 0;
     }
 
     public function getPlayerSupplyShapeIds(int $playerId)
@@ -806,7 +831,7 @@ class ShapeMgr extends \BX\Action\BaseActionRowMgr
 
     public function getPlayerSupplyShapesScore(int $playerId)
     {
-        return array_sum(array_map(fn($s) => $s->shapeScore, $this->getPlayerSupplyShapes($playerId)));
+        return array_sum(array_map(fn ($s) => $s->shapeScore, $this->getPlayerSupplyShapes($playerId)));
     }
 
     public function getPlayerParkShapes(int $playerId)

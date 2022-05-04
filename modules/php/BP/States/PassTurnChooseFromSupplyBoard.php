@@ -34,7 +34,7 @@ trait GameStatesTrait
         $creator = new \BX\Action\ActionCommandCreator($playerId);
         $newChooseAction = new \BP\ChooseShapeFromSupplyBoardActionCommand($playerId, $shapeId);
         $creator->add($newChooseAction);
-        $creator->add(new \BX\PrivateState\NextPrivateStateActionCommand($playerId, 'confirmTurn'));
+        $creator->add(new \BP\NextPrivateStateActionCommand($playerId, 'confirmTurn'));
         $creator->save();
     }
 }

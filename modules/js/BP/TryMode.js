@@ -129,9 +129,7 @@ define([
                             }, {
                             border: false,
                             outline: true,
-                            isTransparentFct: (x, y) => {
-                                return this.shapeMgr.isShapeTransparentAtPos(shapeId, x, y);
-                            },
+                            childEventSelector: '.bp-grid-event',
                         });
                     }
                 }

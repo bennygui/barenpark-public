@@ -97,7 +97,7 @@ define([
 
                 // Do nothing if movement is not needed
                 if (!config.destroy && config.pos === null && mobile.parentNode == targetElt) {
-                    if (config.clearPos) dojo.style(mobile, { top: null, left: null, position: null });
+                    if (config.clearPos) this.clearPos(mobile);
                     return new Promise((resolve, reject) => {
                         resolve();
                     });
@@ -154,7 +154,7 @@ define([
                             else this.changeParent(mobile, newParent);
                         }
                         if (config.destroy) dojo.destroy(mobile);
-                        if (config.clearPos && !config.destroy) dojo.style(mobile, { top: null, left: null, position: null });
+                        if (config.clearPos && !config.destroy) this.clearPos(mobile);
                         // Correct end position if other elements have moved
                         if (!config.clearPos && !config.destroy && config.pos !== null) {
                             mobile.style.left = config.pos.x + 'px';
@@ -164,6 +164,9 @@ define([
                     });
                     animation.play();
                 });
+            },
+            clearPos(element) {
+                dojo.style(element, { top: null, left: null, position: null });
             },
             changeParent(mobile, new_parent, relation) {
                 if (mobile === null) {

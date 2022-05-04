@@ -46,7 +46,7 @@ trait GameStatesTrait
         $shapeMgr = \BX\Action\ActionRowMgrRegister::getMgr('shape');
         $parkMgr = \BX\Action\ActionRowMgrRegister::getMgr('park');
         $shapeIds = array_merge(
-            $shapeMgr->getPlayerSupplyShapeIds($playerId),
+            array_values(array_filter($shapeMgr->getPlayerSupplyShapeIds($playerId), fn ($id) => !$shapeMgr->isGeneratedShapeId($id))),
             $shapeMgr->getTopChoosableShapeIds([
                 \BP\ShapeGreenBase::class,
                 \BP\ShapeWhiteAnimalHouseBase::class,
@@ -58,7 +58,7 @@ trait GameStatesTrait
             \BX\Action\ActionCommandMgr::getAllActionClassIdInActionOrder($playerId, \BP\TryModePlaceParkActionCommand::class),
             \BX\Action\ActionCommandMgr::getAllActionClassIdInActionOrder($playerId, \BP\PlacePlayerParkActionCommand::class),
         );
-        $excludedParkIds = array_map(fn($action) => $action->getParkId(), $chooseParkActions);
+        $excludedParkIds = array_map(fn ($action) => $action->getParkId(), $chooseParkActions);
         $parkIds = array_values(array_filter($parkIds, fn ($parkId) => !in_array($parkId, $excludedParkIds)));
         return [
             'choosableShapeIds' => $shapeIds,
@@ -86,7 +86,7 @@ trait GameStatesTrait
 
         $creator = new \BX\Action\ActionCommandCreator($playerId);
         $creator->add(new \BP\TryModeChooseTileActionCommand($playerId, $shapeId));
-        $creator->add(new \BX\PrivateState\NextPrivateStateActionCommand($playerId, 'chooseTile'));
+        $creator->add(new \BP\NextPrivateStateActionCommand($playerId, 'chooseTile'));
         $creator->save();
     }
 
@@ -99,7 +99,7 @@ trait GameStatesTrait
         \BX\Action\ActionCommandMgr::undoLast($playerId);
         $creator = new \BX\Action\ActionCommandCreator($playerId);
         $creator->add(new \BP\TryModeChooseTileActionCommand($playerId, $shapeId));
-        $creator->add(new \BX\PrivateState\NextPrivateStateActionCommand($playerId, 'chooseTile'));
+        $creator->add(new \BP\NextPrivateStateActionCommand($playerId, 'chooseTile'));
         $creator->save();
     }
 
@@ -149,7 +149,7 @@ trait GameStatesTrait
             $parkVerticalFlip
         );
         $creator->add($placeAction);
-        $creator->add(new \BX\PrivateState\NextPrivateStateActionCommand($playerId));
+        $creator->add(new \BP\NextPrivateStateActionCommand($playerId));
         $creator->save();
     }
 
@@ -169,7 +169,7 @@ trait GameStatesTrait
 
         $creator = new \BX\Action\ActionCommandCreator($playerId);
         $creator->add(new \BP\TryModeChooseParkActionCommand($playerId, $parkId));
-        $creator->add(new \BX\PrivateState\NextPrivateStateActionCommand($playerId, 'choosePark'));
+        $creator->add(new \BP\NextPrivateStateActionCommand($playerId, 'choosePark'));
         $creator->save();
     }
 
@@ -190,7 +190,7 @@ trait GameStatesTrait
         \BX\Action\ActionCommandMgr::undoLast($playerId);
         $creator = new \BX\Action\ActionCommandCreator($playerId);
         $creator->add(new \BP\TryModeChooseParkActionCommand($playerId, $parkId));
-        $creator->add(new \BX\PrivateState\NextPrivateStateActionCommand($playerId, 'choosePark'));
+        $creator->add(new \BP\NextPrivateStateActionCommand($playerId, 'choosePark'));
         $creator->save();
     }
 
@@ -222,7 +222,7 @@ trait GameStatesTrait
         $creator = new \BX\Action\ActionCommandCreator($playerId);
         $newPlacePark = new \BP\TryModePlaceParkActionCommand($playerId, $chooseParkAction->getParkId(), $posX, $posY);
         $creator->add($newPlacePark);
-        $creator->add(new \BX\PrivateState\NextPrivateStateActionCommand($playerId));
+        $creator->add(new \BP\NextPrivateStateActionCommand($playerId));
         $creator->save();
     }
 }

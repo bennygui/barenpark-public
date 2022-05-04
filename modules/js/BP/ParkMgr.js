@@ -18,6 +18,7 @@ define([
     function(dojo, declare) {
         return declare("bp.ParkMgr", null, {
             PARK_NB_GRIDS: 4,
+            EXTRA_PLACEMENT_SIZE: 3,
 
             setup(gamedatas) {
                 const elemCreationElem = gameui.getElementCreationElement();
@@ -53,12 +54,12 @@ define([
                 }
 
                 // Create a grid to position shapes and a grid over it to react to click events
-                for (let x = 0; x < this.PARK_NB_GRIDS; ++x) {
+                for (let x = -1 * this.EXTRA_PLACEMENT_SIZE; x < this.PARK_NB_GRIDS; ++x) {
                     for (let y = 0; y < this.PARK_NB_GRIDS; ++y) {
                         const gridPos = document.createElement('div');
                         gridPos.classList.add('bp-park-grid-position');
                         const gridEvent = document.createElement('div');
-                        gridEvent.classList.add('bp-park-grid-event');
+                        gridEvent.classList.add('bp-grid-event');
                         const grids = [gridPos, gridEvent];
                         for (const grid of grids) {
                             grid.dataset.parkId = parkId;

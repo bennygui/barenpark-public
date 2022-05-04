@@ -33,7 +33,7 @@ trait GameStatesTrait
 
         $creator = new \BX\Action\ActionCommandCreator($playerId);
         $creator->add(new \BP\ChooseTileFromPlayerSupplyActionCommand($playerId, $shapeId));
-        $creator->add(new \BX\PrivateState\NextPrivateStateActionCommand($playerId));
+        $creator->add(new \BP\NextPrivateStateActionCommand($playerId));
         $creator->save();
     }
 }

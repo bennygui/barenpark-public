@@ -9,14 +9,14 @@
  */
 
 var isDebug = window.location.host == 'studio.boardgamearena.com' || window.location.hash.indexOf('debug') > -1;
-var debug = isDebug ? console.info.bind(window.console) : function() {};
+var debug = isDebug ? console.info.bind(window.console) : function () { };
 
 define([
-        "dojo",
-        "dojo/_base/declare",
-        g_gamethemeurl + "modules/js/BX/CSSTransition.js",
-    ],
-    function(dojo, declare) {
+    "dojo",
+    "dojo/_base/declare",
+    g_gamethemeurl + "modules/js/BX/CSSTransition.js",
+],
+    function (dojo, declare) {
         return declare("bp.PlayerParkMgr", bx.Util, {
             ENTRY_POSITION: {
                 posX: 0,
@@ -130,17 +130,18 @@ define([
                 // Resize park area based on content
                 parksArea.style.width = (
                     (Math.max(gridMaxX, ...parkElems.map(c => parseInt(c.dataset.gridX))) + 1) *
-                    gameui.GRID_SIZE * this.parkMgr.PARK_NB_GRIDS) + 'px';
+                    gameui.getGridSize() * this.parkMgr.PARK_NB_GRIDS) + 'px';
                 parksArea.style.height = (
                     (Math.max(gridMaxY, ...parkElems.map(c => parseInt(c.dataset.gridY))) + 1) *
-                    gameui.GRID_SIZE * this.parkMgr.PARK_NB_GRIDS +
+                    gameui.getGridSize() * this.parkMgr.PARK_NB_GRIDS +
                     parkEntryElem.offsetHeight) + 'px';
 
                 // Sort parks to fix z-index when a shape overlaps more than one park
-                this.cssTransition.callOnTransitionEnd(() => {
+                const sortPark = () => {
                     const parkElems = this.getAllPlayerAreaParkElement(playerId);
                     for (const parkElem of parkElems) {
                         parkElem.remove();
+                        gameui.clearPos(parkElem);
                     }
                     parkElems.sort((p1, p2) => {
                         const cmp = parseInt(p2.dataset.gridY) - parseInt(p1.dataset.gridY);
@@ -150,7 +151,12 @@ define([
                     for (const parkElem of parkElems) {
                         parksArea.appendChild(parkElem);
                     }
-                });
+                };
+                if (gameui.isFastMode()) {
+                    sortPark();
+                } else {
+                    this.cssTransition.callOnTransitionEnd(sortPark);
+                }
             },
 
             getPlayerAreaElement(playerId) {
@@ -171,7 +177,14 @@ define([
                 return document.querySelector('#bp-player-area-' + playerId + ' .bp-player-area-park-controls');
             },
 
-            addPlayerParkShapeMovement(playerId, shapeElem, initialParkPosition, neighbourPositions, callback, onAcceptClick) {
+            removeHoverShape() {
+                const hoverShape = document.querySelector('.bp-shape-hover');
+                if (hoverShape) {
+                    hoverShape.remove();
+                }
+            },
+
+            addPlayerParkShapeMovement(playerId, shapeElem, initialParkPosition, neighbourPositions, extraPlacementParkIdSet, callback, onAcceptClick) {
                 const parksArea = this.getPlayerAreaElement(playerId);
                 let parkId = null
                 let rotation = 0;
@@ -189,9 +202,29 @@ define([
                 }
 
                 const doCallback = () => callback(parkId, x, y, this.normalizeRotation(rotation), flipH, flipV);
+                const hoverElement = this.shapeMgr.createShapeElementFromShapeDefId(shapeElem.dataset.shapeDefId);
+                hoverElement.classList.add('bp-shape-hover');
 
                 // Click on grid
-                for (const gridElem of Array.from(parksArea.querySelectorAll('.bp-park-grid-event'))) {
+                for (const gridElem of Array.from(parksArea.querySelectorAll('.bp-grid-event'))) {
+                    if (!gridElem.parentElement.classList.contains('bp-park')) {
+                        continue;
+                    }
+                    if (parseInt(gridElem.dataset.gridX) < 0) {
+                        if (!extraPlacementParkIdSet.has(gridElem.dataset.parkId)) {
+                            gridElem.style.removeProperty('pointer-events');
+                            continue;
+                        } else {
+                            gridElem.style.setProperty('pointer-events', 'all', 'important');
+                        }
+                    }
+                    gameui.connect(gridElem, 'mouseover', () => {
+                        hoverElement.remove()
+                        gridElem.appendChild(hoverElement);
+                    });
+                    gameui.connect(gridElem, 'mouseout', () => {
+                        hoverElement.remove()
+                    });
                     gameui.addClickable(
                         gridElem,
                         () => {
@@ -205,7 +238,7 @@ define([
                             this.placementMoveShapeElementToPlayerPark(playerId, shapeElem, parkId, x, y);
                             doCallback();
                         }, {
-                            border: false,
+                        border: false,
                         }
                     );
                 }
@@ -231,7 +264,7 @@ define([
                             this.placementMoveShapeElementToPlayerPark(playerId, shapeElem, parkId, x, y);
                             doCallback();
                         }, {
-                            border: false,
+                        border: false,
                         }
                     );
                 }
@@ -246,9 +279,10 @@ define([
                             }
                             doIt();
                             this.applyTransformToShape(shapeElem, rotation, flipH, flipV);
+                            this.applyTransformToShape(hoverElement, rotation, flipH, flipV);
                             doCallback();
                         }, {
-                            border: false,
+                        border: false,
                         }
                     );
                 };
@@ -316,7 +350,7 @@ define([
                         lockId: 'moveShapeElementToPlayerPark',
                         phantom: true,
                         isInstantaneous: isInstantaneous,
-                    }).then(() => this.resizePlayerArea(playerId) );
+                    }).then(() => this.resizePlayerArea(playerId));
                 }
                 return new Promise((resolve, reject) => {
                     resolve();
@@ -461,8 +495,8 @@ define([
                                 lockId: 'replacePlayerParkArea',
                                 phantom: false,
                                 pos: {
-                                    x: gameui.GRID_SIZE * this.parkMgr.PARK_NB_GRIDS * gridPos.x,
-                                    y: gameui.GRID_SIZE * this.parkMgr.PARK_NB_GRIDS * gridPos.y,
+                                    x: gameui.getGridSize() * this.parkMgr.PARK_NB_GRIDS * gridPos.x,
+                                    y: gameui.getGridSize() * this.parkMgr.PARK_NB_GRIDS * gridPos.y,
                                 },
                                 clearPos: true,
                                 changeParent: false,

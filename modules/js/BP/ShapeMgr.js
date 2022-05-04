@@ -9,13 +9,13 @@
  */
 
 var isDebug = window.location.host == 'studio.boardgamearena.com' || window.location.hash.indexOf('debug') > -1;
-var debug = isDebug ? console.info.bind(window.console) : function() {};
+var debug = isDebug ? console.info.bind(window.console) : function () { };
 
 define([
-        "dojo",
-        "dojo/_base/declare",
-    ],
-    function(dojo, declare) {
+    "dojo",
+    "dojo/_base/declare",
+],
+    function (dojo, declare) {
         return declare("bp.ShapeMgr", null, {
             setup(gamedatas) {
                 const elemCreationElem = gameui.getElementCreationElement();
@@ -40,30 +40,26 @@ define([
                 if (setId) {
                     element.id = 'bp-shape-id-' + shape.shapeId;
                 }
+                for (let y = 0; y < shape.shapeArray.length; ++y) {
+                    for (let x = 0; x < shape.shapeArray[y].length; ++x) {
+                        if (shape.shapeArray[y][x] == 0) {
+                            continue;
+                        }
+                        const gridEvent = document.createElement('div');
+                        gridEvent.classList.add('bp-grid-event');
+                        gridEvent.dataset.gridX = x;
+                        gridEvent.dataset.gridY = y;
+                        element.appendChild(gridEvent);
+                    }
+                }
+                const overlayElem = document.createElement('div');
+                overlayElem.classList.add('bp-shape-overlay');
+                element.appendChild(overlayElem);
                 return element;
             },
 
             getShapeElementById(shapeId) {
                 return document.getElementById('bp-shape-id-' + shapeId);
-            },
-
-            isShapeTransparentAtPos(shapeId, x, y) {
-                x = Math.floor(x / gameui.GRID_SIZE);
-                y = Math.floor(y / gameui.GRID_SIZE);
-                if (y < 0) {
-                    y = 0;
-                }
-                if (x < 0) {
-                    x = 0;
-                }
-                const shapeArray = gameui.gamedatas.shapes[shapeId].shapeArray;
-                if (y >= shapeArray.length) {
-                    y = shapeArray.length - 1;
-                }
-                if (x >= shapeArray[y].length) {
-                    x = shapeArray[y].length - 1;
-                }
-                return (shapeArray[y][x] == 0);
             },
         });
     });

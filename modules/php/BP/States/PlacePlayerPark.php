@@ -47,9 +47,9 @@ trait GameStatesTrait
         $icons = $this->getOverlappedIcons($playerId, null, $newPlacePark);
 
         if (count($icons) > 0) {
-            $creator->add(new \BX\PrivateState\NextPrivateStateActionCommand($playerId, 'chooseFromSupplyBoard'));
+            $creator->add(new \BP\NextPrivateStateActionCommand($playerId, 'chooseFromSupplyBoard'));
         } else {
-            $creator->add(new \BX\PrivateState\NextPrivateStateActionCommand($playerId, 'confirmTurn'));
+            $creator->add(new \BP\NextPrivateStateActionCommand($playerId, 'confirmTurn'));
         }
         $creator->save();
     }

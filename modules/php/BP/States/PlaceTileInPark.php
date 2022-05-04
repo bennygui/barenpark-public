@@ -48,7 +48,7 @@ trait GameStatesTrait
         \BX\Action\ActionCommandMgr::undoLast($playerId);
         $creator = new \BX\Action\ActionCommandCreator($playerId);
         $creator->add(new \BP\ChooseTileFromPlayerSupplyActionCommand($playerId, $shapeId));
-        $creator->add(new \BX\PrivateState\NextPrivateStateActionCommand($playerId));
+        $creator->add(new \BP\NextPrivateStateActionCommand($playerId));
         $creator->save();
     }
 
@@ -91,9 +91,9 @@ trait GameStatesTrait
         $creator->add(new \BP\GainAchievementActionCommand($playerId, count($placeAction->getBearStatueShapeIds())));
 
         if (count($this->getOverlappedIcons($playerId,  null,  null, $placeAction)) > 0) {
-            $creator->add(new \BX\PrivateState\NextPrivateStateActionCommand($playerId, 'chooseFromSupplyBoard'));
+            $creator->add(new \BP\NextPrivateStateActionCommand($playerId, 'chooseFromSupplyBoard'));
         } else {
-            $creator->add(new \BX\PrivateState\NextPrivateStateActionCommand($playerId, 'confirmTurn'));
+            $creator->add(new \BP\NextPrivateStateActionCommand($playerId, 'confirmTurn'));
         }
         $creator->save();
     }

@@ -158,6 +158,17 @@ $machinestates = [
             'confirmTurn' => STATE_PRIVATE_CONFIRM_TURN_ID,
         ],
     ],
+    STATE_PRIVATE_PASS_TURN_NO_SHAPE_ID => [
+        "name" => STATE_PRIVATE_PASS_TURN_NO_SHAPE,
+        "description" => clienttranslate('${you} must wait for the other players to end their turn'),
+        "descriptionmyturn" => clienttranslate('${you} must pass (no Green Area and no placeable tiles)'),
+        "type" => "privateState",
+        "possibleactions" => [
+            'passTurn',
+            'enterTryMode',
+        ],
+        "transitions" => [],
+    ],
     STATE_PRIVATE_CONFIRM_TURN_ID => [
         "name" => STATE_PRIVATE_CONFIRM_TURN,
         "description" => clienttranslate('${you} must wait for the other players to end their turn'),

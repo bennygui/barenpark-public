@@ -44,7 +44,7 @@ trait GameStatesTrait
     private function debugGetSqlForActionCommand($studioPlayerId, $replacePlayerId)
     {
         return [
-            "UPDATE action_command SET action_json = REPLACE(action_json, '\"playerId\":$replacePlayerId', '\"playerId\":$studioPlayerId') WHERE action_json like '\"playerId\":$replacePlayerId'"
+            "UPDATE action_command SET action_json = REPLACE(action_json, '\"playerId\":$replacePlayerId', '\"playerId\":$studioPlayerId') WHERE action_json like '%\"playerId\":$replacePlayerId%'"
         ];
     }
 

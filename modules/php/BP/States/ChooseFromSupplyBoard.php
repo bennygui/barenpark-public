@@ -82,9 +82,9 @@ trait GameStatesTrait
         $icons = $this->getOverlappedIcons($playerId, $newChooseAction);
 
         if (count($icons) > 0) {
-            $creator->add(new \BX\PrivateState\NextPrivateStateActionCommand($playerId, 'chooseFromSupplyBoard'));
+            $creator->add(new \BP\NextPrivateStateActionCommand($playerId, 'chooseFromSupplyBoard'));
         } else {
-            $creator->add(new \BX\PrivateState\NextPrivateStateActionCommand($playerId, 'confirmTurn'));
+            $creator->add(new \BP\NextPrivateStateActionCommand($playerId, 'confirmTurn'));
         }
         $creator->save();
     }
@@ -102,7 +102,7 @@ trait GameStatesTrait
         // We do not need the icons but we call it to validate
         $this->getOverlappedIcons($playerId, null, $newChooseAction);
 
-        $creator->add(new \BX\PrivateState\NextPrivateStateActionCommand($playerId, 'placePlayerPark'));
+        $creator->add(new \BP\NextPrivateStateActionCommand($playerId, 'placePlayerPark'));
         $creator->save();
     }
 
@@ -120,7 +120,7 @@ trait GameStatesTrait
         // We do not need the icons but we call it to validate
         $this->getOverlappedIcons($playerId, null, $newChooseAction);
 
-        $creator->add(new \BX\PrivateState\NextPrivateStateActionCommand($playerId, 'placePlayerPark'));
+        $creator->add(new \BP\NextPrivateStateActionCommand($playerId, 'placePlayerPark'));
         $creator->save();
     }
 

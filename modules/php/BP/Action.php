@@ -14,6 +14,20 @@ namespace BP;
 
 require_once(__DIR__ . '/../BX/Action.php');
 
+class NextPrivateStateActionCommand extends \BX\PrivateState\NextPrivateStateActionCommand
+{
+    public function reevaluateReverseMustUndo($hasDelete, $hasUndo)
+    {
+        if ($this->getTransition() != 'confirmTurn') {
+            return false;
+        }
+        if ($hasDelete || $hasUndo) {
+            return true;
+        }
+        return false;
+    }
+}
+
 trait ShapeActionTrait
 {
     private $shapeId;
@@ -89,9 +103,11 @@ class EnterPlayLoopActionCommand extends \BX\PrivateState\JumpPrivateStateAction
 
     public function undo(\BX\Action\BaseActionCommandNotifier $notifier)
     {
-        $notifier->notifyNoMessage(NTF_MOVE_SHAPE_TO_PLAYER_SUPPLY, [
-            'shapeId' => $this->shapeId,
-        ]);
+        if ($this->shapeId !== null) {
+            $notifier->notifyNoMessage(NTF_MOVE_SHAPE_TO_PLAYER_SUPPLY, [
+                'shapeId' => $this->shapeId,
+            ]);
+        }
         parent::do($notifier);
     }
 }
@@ -425,6 +441,7 @@ class ChooseShapeFromSupplyBoardActionCommand extends \BX\Action\BaseActionComma
                     return \BX\Action\REEVALUATE_UPDATE;
                 }
             }
+            $args['chooseShapeIds'][] = $this->shapeId;
             return \BX\Action\REEVALUATE_NO_CHANGE;
         }
         if (array_key_exists($this->shapeId, $args['swapShapes'])) {
@@ -730,6 +747,7 @@ class TryModeChooseTileActionCommand extends \BX\Action\BaseActionCommand
         $notifier->notifyNoMessage(NTF_CREATE_SHAPE, [
             'shape' => $newShape,
         ]);
+        $newShape->moveToPlayerSupply($this->playerId);
     }
 
     public function undo(\BX\Action\BaseActionCommandNotifier $notifier)
