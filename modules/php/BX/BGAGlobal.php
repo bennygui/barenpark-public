@@ -59,7 +59,11 @@ class GlobalMgr
 
     static public function getGlobal(int $globalId)
     {
-        return self::getInstance()->db->getRowByKey($globalId)->globalValue;
+        $row = self::getInstance()->db->getRowByKey($globalId);
+        if ($row === null) {
+            return null;
+        }
+        return $row->globalValue;
     }
 
     static public function getNextMoveNumber()

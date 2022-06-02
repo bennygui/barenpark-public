@@ -24,10 +24,12 @@ trait GameStatesTrait
         $args = [];
         $seenPriority = [];
         $choosableShapeBaseTypes = [];
+        $choosableIcons = [];
         foreach ($icons as $icon) {
             $priority = $icon::getIconPriority();
             $number = "number$priority";
             $iconText = "iconText$priority";
+            $choosableIcons[] = $icon::getChoosableShapes()[0];
             if (!array_key_exists($priority, $seenPriority)) {
                 $seenPriority[$priority] = true;
                 $logs[] = '${' . $number . '} ${' . $iconText . '}';
@@ -51,6 +53,7 @@ trait GameStatesTrait
             ],
             'choosableShapeIds' => $choosableShapeIds,
             'choosableParkIds' => $choosableParkIds,
+            'choosableIcons' => $choosableIcons, 
         ];
     }
 

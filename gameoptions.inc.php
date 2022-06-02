@@ -50,6 +50,21 @@ $game_options = [
             ],
         ],
     ],
+    GAME_OPTION_HIDE_SCORE_ID => [
+        'name' => totranslate('Hide score'),
+        'values' => [
+            GAME_OPTION_HIDE_SCORE_VALUE_SHOW => [
+                'name' => totranslate('Show'),
+                'tmdisplay' => totranslate('Show score in game'),
+                'description' => totranslate('Show score in game'),
+            ],
+            GAME_OPTION_HIDE_SCORE_VALUE_HIDE => [
+                'name' => totranslate('Hide'),
+                'tmdisplay' => totranslate('Hide score in game'),
+                'description' => totranslate('Hide score in game'),
+            ],
+        ],
+    ],
 ];
 
 $game_preferences = [

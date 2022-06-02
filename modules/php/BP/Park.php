@@ -640,7 +640,7 @@ class GlobalPlayerPark
                 $positions[$extraPlacementParkId][0][$y]['left'] = new ParkGrid($extraPlacementParkId, -1, $y);
             }
             // From down park to extra grid 
-            $downParkId = $this->getParkGridAt($parkId, -1, PARK_SIZE)->parkId;
+            $downParkId = $this->getParkGridAt($extraPlacementParkId, -1, PARK_SIZE)->parkId;
             foreach (range(PARK_SIZE - EXTRA_PLACEMENT_SIZE, PARK_SIZE - 1) as $x) {
                 $positions[$downParkId][$x][0]['up'] = new ParkGrid($extraPlacementParkId, $x - PARK_SIZE, PARK_SIZE - 1);
             }

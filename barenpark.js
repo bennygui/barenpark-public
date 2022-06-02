@@ -51,12 +51,15 @@ define([
 
             PREF_ZOOM_FACTOR_ID: 'PREF_ZOOM_FACTOR_ID',
             PREF_ZOOM_FACTOR_DEFAULT_VALUE: 2,
+            PREF_ZOOM_SUPPLY_FACTOR_ID: 'PREF_ZOOM_SUPPLY_FACTOR_ID',
+            PREF_ZOOM_SUPPLY_FACTOR_DEFAULT_VALUE: 2,
 
             PREF_SHOW_SHAPE_GRID_ID: 'PREF_SHOW_SHAPE_GRID_ID',
             PREF_SHOW_SHAPE_GRID_DEFAULT_VALUE: false,
 
             constructor() {
                 this.zoomFactor = this.PREF_ZOOM_FACTOR_DEFAULT_VALUE;
+                this.zoomSupplyFactor = this.PREF_ZOOM_SUPPLY_FACTOR_DEFAULT_VALUE;
 
                 this.PREF_COLUMN_DISPLAY_VALUES = [
                     this.PREF_COLUMN_DISPLAY_VALUE_ADAPT,
@@ -82,6 +85,7 @@ define([
                 prefColDesc[this.PREF_COLUMN_DISPLAY_VALUE_2_COLUMN] = _('Force to display in two columns: supply board on the right and player parks on the left.');
                 this.localPreferenceToRegister.push([this.PREF_COLUMN_DISPLAY_ID, this.PREF_COLUMN_DISPLAY_VALUE_ADAPT, prefColDesc]);
                 this.localPreferenceToRegister.push([this.PREF_ZOOM_FACTOR_ID, this.PREF_ZOOM_FACTOR_DEFAULT_VALUE, {}]);
+                this.localPreferenceToRegister.push([this.PREF_ZOOM_SUPPLY_FACTOR_ID, this.PREF_ZOOM_SUPPLY_FACTOR_DEFAULT_VALUE, {}]);
                 this.localPreferenceToRegister.push([this.PREF_SHOW_SHAPE_GRID_ID, this.PREF_SHOW_SHAPE_GRID_DEFAULT_VALUE, {}]);
 
                 this.htmlTextForLogKeys.push('shapeImage');
@@ -105,7 +109,7 @@ define([
                 this.placeTileInParkPosition = null;
                 this.placeTileInParkPositionIsValid = false;
 
-                dojo.connect(window, "onresize", this, () => this.setZoomFactor(this.zoomFactor));
+                dojo.connect(window, "onresize", this, () => this.setZoomSupplyFactor(this.zoomSupplyFactor));
             },
 
             setup(gamedatas) {
@@ -125,6 +129,12 @@ define([
             },
 
             setupPlayersPanel(gamedatas) {
+                // Hide score in panel depending on game option
+                if (gamedatas.hideScore) {
+                    for (const elem of document.querySelectorAll('#player_boards .player_score')) {
+                        elem.classList.add('bx-hidden');
+                    }
+                }
                 const playerOrderClass = 'bp-player-panel-player-order';
                 const playerIdArray = Object.keys(gamedatas.players);
                 playerIdArray.sort((p1, p2) => gamedatas.players[p1].player_no - gamedatas.players[p2].player_no);
@@ -170,10 +180,10 @@ define([
                     );
                 }
 
-                // Preference for zoom factor
+                // Preference for zoom factor for tiles
                 const zoomDescription = document.createElement('div');
                 zoomDescription.classList.add('bp-player-panel-column-description');
-                zoomDescription.innerText = _('Zoom (use 2 columns to zoom more)');
+                zoomDescription.innerText = _('Zoom Player Parks');
                 displayOptionsPanel.appendChild(zoomDescription);
 
                 const sliderElem = document.createElement('input');
@@ -190,7 +200,34 @@ define([
                 displayOptionsPanel.appendChild(sliderElem);
                 this.addTooltip(
                     sliderElem.id,
-                    _('Zoom tiles. If your display is too small, you can force to display in two columns to zoom more.'),
+                    _('Zoom player tiles and parks'),
+                    ''
+                );
+
+                // Preference for zoom factor for supply
+                const zoomSupplyDescription = document.createElement('div');
+                zoomSupplyDescription.classList.add('bp-player-panel-column-description');
+                zoomSupplyDescription.innerHTML = this.format_string_recursive(
+                    _('Zoom Supply${newline}(use 2 columns to zoom more)'),
+                    { newline: '<br>' }
+                );
+                displayOptionsPanel.appendChild(zoomSupplyDescription);
+
+                const sliderSupplyElem = document.createElement('input');
+                sliderSupplyElem.id = 'bp-player-panel-zoom-supply-slider';
+                sliderSupplyElem.classList.add('bp-player-panel-zoom');
+                sliderSupplyElem.type = 'range';
+                sliderSupplyElem.min = '0';
+                sliderSupplyElem.max = '10';
+                sliderSupplyElem.value = '0';
+                sliderSupplyElem.addEventListener('input', (e) => {
+                    const zoom = (2 - (parseInt(sliderSupplyElem.value) / 10));
+                    this.setLocalPreference(this.PREF_ZOOM_SUPPLY_FACTOR_ID, zoom);
+                });
+                displayOptionsPanel.appendChild(sliderSupplyElem);
+                this.addTooltip(
+                    sliderSupplyElem.id,
+                    _('Zoom supply board tiles. If your display is too small, you can force to display in two columns to zoom more.'),
                     ''
                 );
 
@@ -222,21 +259,34 @@ define([
                     zoomFactor = 2;
                 }
                 this.zoomFactor = zoomFactor;
-                document.body.style.setProperty('--bp-zoom-factor', this.zoomFactor);
-                if (zoomFactor < 2) {
-                    const maxWidth = document.getElementById('bp-area-full').offsetWidth;
-                    const boardWidth = document.querySelector('.bp-shape-supply-board-wrap').offsetWidth;
-                    if (boardWidth > maxWidth) {
-                        this.setZoomFactor(zoomFactor + 0.1);
-                        return;
-                    }
-                }
+                document.body.style.setProperty('--bp-zoom-factor', zoomFactor);
                 const sliderElem = document.getElementById('bp-player-panel-zoom-slider');
                 if (sliderElem !== null) {
                     sliderElem.value = 20 - (zoomFactor * 10);
                 }
                 for (const playerId in this.gamedatas.players) {
                     this.playerParkMgr.resizePlayerArea(playerId)
+                }
+            },
+
+            setZoomSupplyFactor(zoomFactor) {
+                if (zoomFactor > 2) {
+                    zoomFactor = 2;
+                }
+                this.zoomSupplyFactor = zoomFactor;
+                const supplyBoard = document.getElementById('bp-supply-board');
+                supplyBoard.style.setProperty('--bp-zoom-factor', zoomFactor);
+                if (zoomFactor < 2) {
+                    const maxWidth = document.getElementById('bp-area-full').offsetWidth;
+                    const boardWidth = document.querySelector('.bp-shape-supply-board-wrap').offsetWidth;
+                    if (boardWidth > maxWidth) {
+                        this.setZoomSupplyFactor(zoomFactor + 0.1);
+                        return;
+                    }
+                }
+                const sliderElem = document.getElementById('bp-player-panel-zoom-supply-slider');
+                if (sliderElem !== null) {
+                    sliderElem.value = 20 - (zoomFactor * 10);
                 }
             },
 
@@ -270,6 +320,9 @@ define([
                         break;
                     case this.PREF_ZOOM_FACTOR_ID:
                         this.setZoomFactor(value);
+                        break;
+                    case this.PREF_ZOOM_SUPPLY_FACTOR_ID:
+                        this.setZoomSupplyFactor(value);
                         break;
                     case this.PREF_SHOW_SHAPE_GRID_ID:
                         const showGridCheckbox = document.getElementById('bp-player-panel-show-grid-checkbox');
@@ -372,9 +425,15 @@ define([
             },
 
             showHasUndoAction() {
-                const elem = document.querySelector('#bp-player-area-' + this.player_id + ' .bp-has-undo-action-title');
-                if (elem !== null) {
-                    elem.classList.remove('bx-hidden');
+                const mainTitleElem = document.getElementById('pagemaintitletext');
+                const elem = document.createElement('span');
+                elem.classList.add('bp-has-undo-action-title');
+                elem.innerText = _('Part of your prepared turn was undone');
+                mainTitleElem.appendChild(elem);
+
+                const playerParkTitle = document.querySelector('#bp-player-area-' + this.player_id + ' .bp-has-undo-action-title');
+                if (playerParkTitle !== null) {
+                    playerParkTitle.classList.remove('bx-hidden');
                 }
             },
 
@@ -443,6 +502,8 @@ define([
             },
             onStatePrivateInactiveTurn(args) {
                 debug('onStatePrivateInactiveTurn');
+                this.placeTileInParkPositionIsValid = false;
+                this.placeTileInParkPosition = null;
             },
 
             onButtonsStatePrivateChooseTileFromPlayerSupply(args) {
@@ -639,6 +700,13 @@ define([
                 }
             },
 
+            onButtonsStatePrivateChooseFromSupplyBoard(args) {
+                const actionsElem = document.getElementById('generalactions');
+                for (const icon of args.choosableIcons) {
+                    const iconElem = this.shapeMgr.createIconElement(icon);
+                    actionsElem.appendChild(iconElem);
+                }
+            },
             onStatePrivateChooseFromSupplyBoard(args) {
                 debug('onStatePrivateChooseFromSupplyBoard');
 

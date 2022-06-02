@@ -16,7 +16,7 @@ define([
     "dojo/_base/declare",
 ],
     function (dojo, declare) {
-        return declare("bp.ShapeMgr", null, {
+        return declare("bp.ShapeMgr", bx.Util, {
             setup(gamedatas) {
                 const elemCreationElem = gameui.getElementCreationElement();
                 for (const shapeId in gamedatas.shapes) {
@@ -60,6 +60,12 @@ define([
 
             getShapeElementById(shapeId) {
                 return document.getElementById('bp-shape-id-' + shapeId);
+            },
+
+            createIconElement(icon) {
+                const elem = document.createElement('div');
+                elem.classList.add('bp-icon-' + this.toDashCase(icon.replace(/.*\\/, '')));
+                return elem;
             },
         });
     });

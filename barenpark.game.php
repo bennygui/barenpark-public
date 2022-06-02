@@ -77,6 +77,7 @@ class barenpark extends Table
         self::initGameStateLabels([
             GAME_OPTION_ACHIEVEMENT => GAME_OPTION_ACHIEVEMENT_ID,
             GAME_OPTION_VARIANT_PIT => GAME_OPTION_VARIANT_PIT_ID,
+            GAME_OPTION_HIDE_SCORE => GAME_OPTION_HIDE_SCORE_ID,
         ]);
     }
 
@@ -159,6 +160,7 @@ class barenpark extends Table
         $result['supplyShapesCount'] = $shapeMgr->getSupplyShapesCount();
         $result['isLastTurn'] = $parkMgr->atLeastOnePlayerParksAreFull(array_keys($this->loadPlayersBasicInfos()));
         $result['savedMoveNumber'] = \BX\MoveNumber\getSavedMoveNumberForManagers('player', 'shape', 'park', 'achievement');
+        $result['hideScore'] = (\BX\BGAGlobal\GlobalMgr::getGlobal(GAME_OPTION_HIDE_SCORE_ID) == GAME_OPTION_HIDE_SCORE_VALUE_HIDE);
 
         return $result;
     }

@@ -24,10 +24,16 @@ body {
     --bp-zoom-factor: 2;
 }
 
+#logs {
+    --bp-zoom-factor: 2;
+}
+
 #bp-area-full {
     display: flex;
     flex-wrap: wrap;
     flex-direction: column;
+    justify-content: center;
+    overflow-x: auto;
 
     @at-root .bp-one-column-display #{&} {
         flex-direction: column;
@@ -37,13 +43,11 @@ body {
     @media (min-width: #{$two-column-width}) {
         flex-direction: row;
         flex-wrap: nowrap;
-        justify-content: end;
     }
 
     @at-root .bp-two-column-display #{&} {
         flex-direction: row;
         flex-wrap: nowrap;
-        justify-content: end;
     }
 }
 
@@ -96,6 +100,11 @@ body {
 
 .bp-has-undo-action-title {
     display: inline-block;
+
+    #pagemaintitletext & {
+        display: inline;
+    }
+
     background-color: #9b0202;
     margin: 5px;
     padding: 5px;
@@ -210,6 +219,7 @@ body {
 
 // Supply board
 #bp-supply-board {
+    --bp-zoom-factor: 2;
     margin: 10px;
 
     // Remove margin on iOS: it moves absolute elements
@@ -305,6 +315,7 @@ body {
     width: calc(1726px / var(--bp-zoom-factor));
     height: calc(684px / var(--bp-zoom-factor));
     background-image: url('img/bp/board.jpg');
+    image-rendering: -webkit-optimize-contrast;
     background-size: calc(1726px / var(--bp-zoom-factor)) calc(684px / var(--bp-zoom-factor));
     filter: drop-shadow(0 0 5px black);
 
@@ -315,6 +326,10 @@ body {
 
     z-index: 50;
     transform-origin: top left;
+
+    .bp-shape {
+        pointer-events: none;
+    }
 
     @at-root .bp-one-column-display #{&} {
         transform: unset;
@@ -487,6 +502,7 @@ body {
     width: calc(10px * 2 / var(--bp-zoom-factor));
     height: calc(8px * 2 / var(--bp-zoom-factor));
     background-image: url("img/bp/arrows.png");
+    image-rendering: -webkit-optimize-contrast;
     background-size: calc(240px * 2 / var(--bp-zoom-factor)) calc(40px * 2 / var(--bp-zoom-factor));
     background-position-x: calc(-200px * 2 / var(--bp-zoom-factor));
     background-position-y: calc(-1px * 2 / var(--bp-zoom-factor));
@@ -703,6 +719,7 @@ body {
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
+    justify-content: center;
 
     @at-root .bp-one-column-display #{&} {
         align-content: unset;
@@ -799,6 +816,7 @@ body {
     width: calc(40px * 2 / var(--bp-zoom-factor));
     height: calc(40px * 2 / var(--bp-zoom-factor));
     background-image: url("img/bp/arrows.png");
+    image-rendering: -webkit-optimize-contrast;
     background-size: calc(240px * 2 / var(--bp-zoom-factor)) calc(40px * 2 / var(--bp-zoom-factor));
     filter: drop-shadow(0 0 2px #888888);
 
@@ -888,22 +906,57 @@ body {
     border-radius: 10px;
     margin-right: 10px;
     background-image: url("img/bp/icons.jpg");
+    image-rendering: -webkit-optimize-contrast;
     background-size: calc(160px * 2 / var(--bp-zoom-factor)) calc(40px * 2 / var(--bp-zoom-factor));
+
+    #generalactions & {
+        display: inline-block;
+        vertical-align: middle;
+        margin: 0px;
+        margin-left: 10px;
+        box-shadow: 2px 2px 4px 0px rgba(0, 0, 0, 0.2);
+    }
 }
 
 .bp-icon-shape-green-base {
     @extend %bp-icon;
     background-position: 0px 0px;
+
+    .bp-shape-supply-board & {
+        position: absolute;
+        top: calc(289px * 2 / var(--bp-zoom-factor));
+        left: calc(20px * 2 / var(--bp-zoom-factor));
+        z-index: 50;
+        box-shadow: 0px 0px 5px 10px rgb(255 255 0 / 80%);
+    }
 }
 
 .bp-icon-shape-white-animal-house-base {
     @extend %bp-icon;
     background-position: calc(-40px * 2 / var(--bp-zoom-factor)) 0px;
+
+    .bp-shape-supply-board & {
+        position: absolute;
+        top: calc(293px * 2 / var(--bp-zoom-factor));
+        left: calc(152px * 2 / var(--bp-zoom-factor));
+        z-index: 50;
+        box-shadow: 0px 0px 5px 10px rgb(255 255 0 / 80%);
+        transform: rotate(6deg);
+    }
 }
 
 .bp-icon-shape-orange-enclosure-base {
     @extend %bp-icon;
     background-position: calc(-80px * 2 / var(--bp-zoom-factor)) 0px;
+
+    .bp-shape-supply-board & {
+        position: absolute;
+        top: calc(291px * 2 / var(--bp-zoom-factor));
+        left: calc(553px * 2 / var(--bp-zoom-factor));
+        z-index: 50;
+        box-shadow: 0px 0px 5px 10px rgb(255 255 0 / 80%);
+        transform: rotate(358deg);
+    }
 }
 
 .bp-icon-park {
@@ -1022,7 +1075,7 @@ body {
     border: 1px purple solid;
 }
 
-@for $x from -3 to 4 {
+@for $x from -3 through 4 {
     @for $y from 0 to 4 {
         .bp-park-grid-position[data-grid-x="#{$x}"][data-grid-y="#{$y}"] {
             left: calc(#{$park-grid-size * $x}px * 2 / var(--bp-zoom-factor));
@@ -1046,6 +1099,7 @@ body {
     width: calc(320px / var(--bp-zoom-factor));
     height: calc(320px / var(--bp-zoom-factor));
     background-image: url('img/bp/park_stand_in.jpg');
+    image-rendering: -webkit-optimize-contrast;
     background-size: calc(320px / var(--bp-zoom-factor)) calc(320px / var(--bp-zoom-factor));
     display: flex;
     align-items: center;
@@ -1073,6 +1127,7 @@ body {
     width: calc(320px / var(--bp-zoom-factor));
     height: calc(320px / var(--bp-zoom-factor));
     background-image: url('img/bp/park_stand_in.jpg');
+    image-rendering: -webkit-optimize-contrast;
     background-size: calc(320px / var(--bp-zoom-factor)) calc(320px / var(--bp-zoom-factor));
     display: flex;
     align-items: center;
@@ -1099,6 +1154,7 @@ body {
     width: calc(320px / var(--bp-zoom-factor));
     height: calc(80px / var(--bp-zoom-factor));
     background-image: url('img/bp/park_entry.jpg');
+    image-rendering: -webkit-optimize-contrast;
     background-size: calc(320px / var(--bp-zoom-factor)) calc(640px / var(--bp-zoom-factor));
     background-position-x: 0px;
 }
@@ -1140,6 +1196,7 @@ body {
     width: calc(320px / var(--bp-zoom-factor));
     height: calc(320px / var(--bp-zoom-factor));
     background-image: url('img/bp/parks.jpg');
+    image-rendering: -webkit-optimize-contrast;
     background-size: calc(1280px / var(--bp-zoom-factor)) calc(1280px / var(--bp-zoom-factor));
 }
 
@@ -1245,6 +1302,10 @@ body {
 .bp-shape .bp-shape-overlay {
     background-image: none;
     background-size: calc(1940px / var(--bp-zoom-factor)) calc(1880px / var(--bp-zoom-factor));
+}
+
+.bp-shape {
+    image-rendering: -webkit-optimize-contrast;
 }
 
 .bp-shape[data-shape-def-id="1001"] {

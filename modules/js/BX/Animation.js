@@ -254,5 +254,33 @@ define([
                     setTimeout(() => resolve(), delay);
                 });
             },
+
+            zoomFocus(element, duration = 1000, zoomWait = 50) {
+                const id = element.id + '_zoom_focus'
+                if (document.getElementById(id) !== null) {
+                    return;
+                }
+                const animElem = dojo.clone(element);
+                element.classList.add('bx-phantom');
+
+                animElem.id = id;
+                animElem.style.transition = 'transform ' + (duration/2) + 'ms ease-in-out';
+                element.parentNode.insertBefore(animElem, element);
+                animElem.offsetWidth; // Needed to trigger the transition
+                let prevTransform = getComputedStyle(animElem).transform;
+                if (prevTransform == 'none') {
+                    prevTransform = '';
+                }
+
+                return this.wait(1)
+                    .then(() => animElem.style.transform = prevTransform + ' scale(1.5)')
+                    .then(() => this.wait(duration/2 + zoomWait))
+                    .then(() => animElem.style.removeProperty('transform'))
+                    .then(() => this.wait(duration/2))
+                    .then(() => {
+                    element.classList.remove('bx-phantom');
+                    dojo.destroy(animElem);
+                });
+            }
         });
     });

@@ -50,6 +50,10 @@ define([
                 this.inherited(arguments);
             },
 
+            updatePlayerOrdering() {
+                this.inherited(arguments);
+            },
+
             onEnteringState(stateName, args) {
                 if (args.args && args.args._private && args.args._private.privateStateId && args.args._private.privateStateId != args.id) {
                     this.setPrivateState(args.args._private.privateStateId, args.args._private);

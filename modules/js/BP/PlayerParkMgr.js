@@ -14,6 +14,7 @@ var debug = isDebug ? console.info.bind(window.console) : function () { };
 define([
     "dojo",
     "dojo/_base/declare",
+    g_gamethemeurl + "modules/js/BX/Util.js",
     g_gamethemeurl + "modules/js/BX/CSSTransition.js",
 ],
     function (dojo, declare) {
@@ -22,6 +23,12 @@ define([
                 posX: 0,
                 posY: -1,
             },
+
+            SUPPLY_ICON_IDS: [
+                'bp-icon-shape-green-base-supply',
+                'bp-icon-shape-white-animal-house-base-supply',
+                'bp-icon-shape-orange-enclosure-base-supply',
+            ],
 
             constructor(shapeMgr, parkMgr) {
                 this.shapeMgr = shapeMgr;
@@ -204,6 +211,7 @@ define([
                 const doCallback = () => callback(parkId, x, y, this.normalizeRotation(rotation), flipH, flipV);
                 const hoverElement = this.shapeMgr.createShapeElementFromShapeDefId(shapeElem.dataset.shapeDefId);
                 hoverElement.classList.add('bp-shape-hover');
+                this.applyTransformToShape(hoverElement, rotation, flipH, flipV);
 
                 // Click on grid
                 for (const gridElem of Array.from(parksArea.querySelectorAll('.bp-grid-event'))) {
@@ -307,6 +315,7 @@ define([
             },
 
             setShapeMovementValid(playerId, isValid, validPosition = null) {
+                this.hideSupplyIcons();
                 const controlsElem = this.getPlayerControlsElement(playerId);
                 if (controlsElem === null) {
                     return;
@@ -324,8 +333,13 @@ define([
                 overlappedIconsElem.innerHTML = '';
                 if (validPosition !== null) {
                     for (const icon of validPosition.overlappedIcons) {
-                        const iconElem = this.createIconElement(icon);
+                        const iconElem = this.shapeMgr.createIconElement(icon);
                         overlappedIconsElem.appendChild(iconElem);
+                        const supplyIcon = document.getElementById('bp-icon-' + this.toDashCase(icon.replace(/.*\\/, '')) + '-supply')
+                        if (supplyIcon !== null) {
+                            supplyIcon.classList.remove('bx-hidden');
+                            gameui.zoomFocus(supplyIcon);
+                        }
                     }
                     // shapeId is always equal to shapeDefIf for statues so it's fine like this
                     for (const shapeId of validPosition.statueShapeIds) {
@@ -333,12 +347,6 @@ define([
                         overlappedIconsElem.appendChild(shapeElem);
                     }
                 }
-            },
-
-            createIconElement(icon) {
-                const elem = document.createElement('div');
-                elem.classList.add('bp-icon-' + this.toDashCase(icon.replace(/.*\\/, '')));
-                return elem;
             },
 
             moveShapeElementToPlayerPark(playerId, shapeElem, parkId, x, y, isInstantaneous = false) {
@@ -525,11 +533,19 @@ define([
             },
 
             hideParkControls(playerId) {
+                this.hideSupplyIcons();
                 const elem = this.getPlayerControlsElement(playerId);
                 if (elem === null) {
                     return;
                 }
                 elem.classList.remove('bp-visible-controls');
+            },
+
+            hideSupplyIcons() {
+                for (const id of this.SUPPLY_ICON_IDS) {
+                    const elem = document.getElementById(id);
+                    elem.classList.add('bx-hidden');
+                }
             },
         });
     });
