@@ -191,6 +191,11 @@ trait GameStatesTrait
             $icons = array_filter($icons, fn($icon) => $icon == \BP\Park::class);
         }
 
+        // Cannot take green shapes if there are none
+        if (!\BX\Action\ActionRowMgrRegister::getMgr('shape')->supplyBoardHasGreenShapes()) {
+            $icons = array_filter($icons, fn($icon) => $icon != \BP\ShapeGreenBase::class);
+        }
+
         // Cannot take parks if you have the maximum number of parks, even if you overlap a park icon
         if (\BX\Action\ActionRowMgrRegister::getMgr('park')->playerHasMaximumParks($playerId)) {
             $icons = array_filter($icons, fn($icon) => $icon != \BP\Park::class);

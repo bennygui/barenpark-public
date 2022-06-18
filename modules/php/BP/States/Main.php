@@ -52,7 +52,7 @@ trait GameStatesTrait
         // If supply board is empty and no one can place shapes, game ends
         $shapeMgr = \BX\Action\ActionRowMgrRegister::getMgr('shape');
         if (!$shapeMgr->supplyBoardHasGreenShapes()) {
-            if (!$this->allPlayerCanPlaceShapes()) {
+            if (!$this->atLeastOnePlayerCanPlaceShapes()) {
                 $this->endGame();
                 return;
             }
@@ -194,14 +194,14 @@ trait GameStatesTrait
         }
     }
 
-    private function allPlayerCanPlaceShapes()
+    private function atLeastOnePlayerCanPlaceShapes()
     {
         foreach (array_keys($this->loadPlayersBasicInfos()) as $playerId) {
-            if (!$this->playerCanPlaceShapes($playerId)) {
-                return false;
+            if ($this->playerCanPlaceShapes($playerId)) {
+                return true;
             }
         }
-        return true;
+        return false;
     }
 
     private function playerCanPlaceShapes(int $playerId)
