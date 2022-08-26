@@ -54,7 +54,7 @@ define([
                 for (const regPref of this.localPreferenceToRegister) {
                     if (regPref[0] == prefId) {
                         if (value in regPref[2]) {
-                            return regPref[2][value];
+                            return _(regPref[2][value]);
                         }
                         return null;
                     }

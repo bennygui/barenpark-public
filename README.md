@@ -6,6 +6,6 @@ prevent any copyright problems. I will try to update it when the main
 repository changes.
 
 This is my third game on BGA and is much more organised, with BX being a
-general library that will be reusable in futur games.
+general library that will be reusable in future games.
 
-This matches version 220618-2239 on BGA.
+This matches version 220728-0152 on BGA.

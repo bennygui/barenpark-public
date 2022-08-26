@@ -28,6 +28,9 @@ trait GameStatesTrait
 
     public function stNextPlayer()
     {
+        if (\BX\Action\ActionCommandMgr::count($this->getActivePlayerId()) > 0) {
+            throw new \BgaUserException(clienttranslate('This action is not possible at this time'));
+        }
         $this->activeNextPlayer();
         $playerId = $this->getActivePlayerId();
         // Remove inactive state so that the player cannot undo up to that point when its their turn

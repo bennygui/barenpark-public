@@ -131,7 +131,7 @@ define([
             setupPlayersPanel(gamedatas) {
                 // Hide score in panel depending on game option
                 if (gamedatas.hideScore) {
-                    for (const elem of document.querySelectorAll('#player_boards .player_score')) {
+                    for (const elem of document.querySelectorAll('#player_boards .player_score .player_score_value')) {
                         elem.classList.add('bx-hidden');
                     }
                 }
