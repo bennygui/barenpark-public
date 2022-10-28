@@ -473,6 +473,11 @@ class ParkGrid
         $this->y = $y;
     }
 
+    public function key()
+    {
+        return "{$this->parkId}|{$this->x}|{$this->y}";
+    }
+
     public function canPlaceShape(bool $allowBearStatueOverlap)
     {
         if ($this->containsShape()) {
@@ -689,14 +694,14 @@ class GlobalPlayerPark
         }
         $parkFilledGridCount = [];
         $parkBearStatueFilled = [];
-        $shapeCoveredGrids = 0;
+        $emptyGridKeys = $this->getEmptyGridKeys();
         $coversAtLeastOneEmptyBearStatue = false;
         $this->foreachGrid(
             $args->shapeArray,
             $args->parkId,
             $args->parkTopX,
             $args->parkTopY,
-            function ($grid, $used) use (&$valid, &$emptyValid, &$parkFilledGridCount, &$parkBearStatueFilled, &$shapeCoveredGrids, &$coversAtLeastOneEmptyBearStatue, $args) {
+            function ($grid, $used) use (&$valid, &$emptyValid, &$parkFilledGridCount, &$parkBearStatueFilled, &$emptyGridKeys, &$coversAtLeastOneEmptyBearStatue, $args) {
                 if ($used && ($grid === null || !$grid->canPlaceShape($args->allowBearStatueOverlap))) {
                     $valid = false;
                     // Normally we would return false here to stop the loop but we
@@ -712,7 +717,7 @@ class GlobalPlayerPark
                     }
                 }
                 if ($used && $grid !== null) {
-                    $shapeCoveredGrids += 1;
+                    unset($emptyGridKeys[$grid->key()]);
                     if ($grid->isBearStatueIcon()) {
                         $parkBearStatueFilled[$grid->parkId] = true;
                         if (!$grid->containsShape()) {
@@ -761,7 +766,8 @@ class GlobalPlayerPark
         }
         if (!$valid && $coversAtLeastOneEmptyBearStatue) {
             if ($args->isPitVariantActive() && !$args->allowBearStatueOverlap) {
-                if ($args->isLastTurn() || ($this->countCoveredGrids() + $shapeCoveredGrids) == (PARK_SIZE * PARK_SIZE * PLAYER_MAXIMUM_NUMBER_OF_PARKS)) {
+                $emptyGridKeys = array_filter($emptyGridKeys, fn($grid) => !$grid->isBearStatueIcon());
+                if ($args->isLastTurn() || count($emptyGridKeys) == 0) {
                     // In this case, we must check if the shape fits if we allow the bear statue to overlap
                     $args = (new ParkShapeValidityArgs($args))->setAllowBearStatueOverlap(true);
                     return $this->isShapePositionValid($args);
@@ -840,6 +846,21 @@ class GlobalPlayerPark
             }
         }
         return $count;
+    }
+
+    private function getEmptyGridKeys()
+    {
+        $emptyGrids = [];
+        foreach ($this->parkGrid as $parkGrid) {
+            foreach ($parkGrid as $row) {
+                foreach ($row as $grid) {
+                    if (!$grid->containsShape()) {
+                        $emptyGrids[$grid->key()] = $grid;
+                    }
+                }
+            }
+        }
+        return $emptyGrids;
     }
 
     public function getShapesAdjacentGroups(string $baseClassId)
