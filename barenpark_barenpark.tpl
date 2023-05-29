@@ -51,11 +51,17 @@
                 <div class='bp-supply-board-overlap' id='bp-supply-shape-orange-enclosure-panda6'></div>
                 <div class='bp-supply-board-overlap' id='bp-supply-shape-orange-enclosure-panda7'></div>
                 <div class='bp-supply-board-overlap' id='bp-supply-shape-orange-enclosure-panda8'></div>
-
+                
                 <div class="bp-icon-shape-green-base bx-hidden" id="bp-icon-shape-green-base-supply"></div>
                 <div class="bp-icon-shape-white-animal-house-base bx-hidden" id="bp-icon-shape-white-animal-house-base-supply"></div>
                 <div class="bp-icon-shape-orange-enclosure-base bx-hidden" id="bp-icon-shape-orange-enclosure-base-supply"></div>
             </div>
+        </div>
+        <div class='bp-supply-board-line' id='bp-supply-board-souvenir-shop'>
+            <div class='bp-supply-board-line' id='bp-supply-shape-souvenir-shop1'></div>
+            <div class='bp-supply-board-line' id='bp-supply-shape-souvenir-shop2'></div>
+            <div class='bp-supply-board-line' id='bp-supply-shape-souvenir-shop3'></div>
+            <div class='bp-supply-board-line' id='bp-supply-shape-souvenir-shop4'></div>
         </div>
         <div class='bp-supply-board-line' id='bp-supply-shape-bear-statue'></div>
         <div class='bp-supply-board-line' id='bp-supply-park'></div>

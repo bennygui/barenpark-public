@@ -42,7 +42,7 @@ trait GameStatesTrait
         }
 
         \BX\Action\ActionRowMgrRegister::getMgr('private_state')->clearPlayerStateIfEqual($playerId, STATE_PRIVATE_INACTIVE_TURN_ID);
-        
+
         \BX\Action\ActionCommandMgr::clear();
 
         // If current player park is full, game ends
@@ -162,6 +162,9 @@ trait GameStatesTrait
                 \BP\ShapeOrangeEnclosureBase::class => [],
                 \BP\ShapeBearStatue::class => [],
             ];
+            if ($shapeMgr->gameUsesSouvenirShops()) {
+                $shapeScores[\BP\ShapeSouvenirShopBase::class] = [];
+            }
             foreach ($shapeMgr->getPlayerParkShapes($playerId) as $shape) {
                 foreach (array_keys($shapeScores) as $baseClassId) {
                     $shapeClassId = get_class($shape);
@@ -175,9 +178,12 @@ trait GameStatesTrait
             self::setStat(array_sum($shapeScores[\BP\ShapeWhiteAnimalHouseBase::class]), STATS_PLAYER_SCORE_ANIMAL_HOUSE, $playerId);
             self::setStat(array_sum($shapeScores[\BP\ShapeOrangeEnclosureBase::class]), STATS_PLAYER_SCORE_ENCLOSURE, $playerId);
             self::setStat(array_sum($shapeScores[\BP\ShapeBearStatue::class]), STATS_PLAYER_SCORE_BEAR_STATUE, $playerId);
+            if ($shapeMgr->gameUsesSouvenirShops()) {
+                self::setStat(array_sum($shapeScores[\BP\ShapeSouvenirShopBase::class]), STATS_PLAYER_SCORE_SOUVENIR_SHOP, $playerId);
+            }
             if ($achievementMgr->gameUsesAchievements()) {
                 self::setStat(
-                    array_sum(array_map(fn($a) => $a->achievementScore, array_filter($achievementMgr->getAll(), fn($a) => $a->playerId !== null && $a->playerId == $playerId))),
+                    array_sum(array_map(fn ($a) => $a->achievementScore, array_filter($achievementMgr->getAll(), fn ($a) => $a->playerId !== null && $a->playerId == $playerId))),
                     STATS_PLAYER_SCORE_ACHIEVEMENT,
                     $playerId
                 );
@@ -187,9 +193,12 @@ trait GameStatesTrait
             self::setStat(count($shapeScores[\BP\ShapeWhiteAnimalHouseBase::class]), STATS_PLAYER_NB_PLACED_SHAPE_ANIMAL_HOUSE, $playerId);
             self::setStat(count($shapeScores[\BP\ShapeOrangeEnclosureBase::class]), STATS_PLAYER_NB_PLACED_SHAPE_ENCLOSURE, $playerId);
             self::setStat(count($shapeScores[\BP\ShapeBearStatue::class]), STATS_PLAYER_NB_PLACED_SHAPE_BEAR_STATUE, $playerId);
+            if ($shapeMgr->gameUsesSouvenirShops()) {
+                self::setStat(count($shapeScores[\BP\ShapeSouvenirShopBase::class]), STATS_PLAYER_NB_PLACED_SHAPE_SOUVENIR_SHOP, $playerId);
+            }
             if ($achievementMgr->gameUsesAchievements()) {
                 self::setStat(
-                    count(array_filter($achievementMgr->getAll(), fn($a) => $a->playerId !== null && $a->playerId == $playerId)),
+                    count(array_filter($achievementMgr->getAll(), fn ($a) => $a->playerId !== null && $a->playerId == $playerId)),
                     STATS_PLAYER_NB_ACHIEVEMENT,
                     $playerId
                 );

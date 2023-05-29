@@ -34,6 +34,22 @@ $game_options = [
             ],
         ],
     ],
+    GAME_OPTION_SOUVENIRSHOP_ID => [
+        'name' => totranslate('Use Souvenir Shops Mini Expansion'),
+        'values' => [
+            GAME_OPTION_SOUVENIRSHOP_VALUE_OFF => [
+                'name' => totranslate('Off'),
+                'tmdisplay' => totranslate('Do not use souvenir shops'),
+                'description' => totranslate('Do not use souvenir shops mini expansion'),
+            ],
+            GAME_OPTION_SOUVENIRSHOP_VALUE_ON => [
+                'name' => totranslate('On'),
+                'tmdisplay' => totranslate('Use souvenir shops'),
+                'description' => totranslate('Use souvenir shops'),
+                'nobeginner' => true,
+            ],
+        ],
+    ],
     GAME_OPTION_VARIANT_PIT_ID => [
         'name' => totranslate('Pit Variant'),
         'values' => [

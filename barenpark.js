@@ -113,6 +113,32 @@ define([
             },
 
             setup(gamedatas) {
+                // Preload images
+                const preloadImageArray = [
+                    'bp/achievements.png',
+                    'bp/arrows.png',
+                    'bp/board.jpg',
+                    'bp/columns.png',
+                    'bp/icons.jpg',
+                    'bp/order.jpg',
+                    'bp/park_entry.jpg',
+                    'bp/park_stand_in.jpg',
+                    'bp/parks.jpg',
+                    'bp/shapes.png',
+                    'bp/shapes_1.png',
+                    'bp/shapes_1_clickable.png',
+                    'bp/shapes_2.png',
+                    'bp/shapes_2_clickable.png',
+                    'bp/shapes_3.png',
+                    'bp/shapes_3_clickable.png',
+                    'bp/shapes_4.png',
+                    'bp/shapes_4_clickable.png',
+                    'bp/shapes_5.png',
+                    'bp/shapes_5_clickable.png',
+                    'bp/shapes_clickable.png',
+                ];
+                this.ensureSpecificGameImageLoading(preloadImageArray);
+
                 this.setupPlayersPanel(gamedatas);
 
                 this.shapeMgr.setup(gamedatas);
@@ -619,6 +645,7 @@ define([
                             case 'G': return 'BP\\ShapeGreenBase';
                             case 'W': return 'BP\\ShapeWhiteAnimalHouseBase';
                             case 'O': return 'BP\\ShapeOrangeEnclosureBase';
+                            case 'X': return 'BP\\ShapeSouvenirShopBase';
                         }
                         throw new Error('Unknown icon: ' + icon);
                     });

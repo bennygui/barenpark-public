@@ -303,11 +303,11 @@ body {
     }
 
     @media (min-width: #{$two-column-width}) {
-        order: 2;
+        order: 3;
     }
 
     @at-root .bp-two-column-display #{&} {
-        order: 2;
+        order: 3;
     }
 }
 
@@ -648,6 +648,21 @@ body {
     }
 }
 
+#bp-supply-board-souvenir-shop {
+    @at-root .bp-one-column-display #{&} {
+        order: unset;
+        min-width: unset;
+    }
+
+    @media (min-width: #{$two-column-width}) {
+        order: 2;
+    }
+
+    @at-root .bp-two-column-display #{&} {
+        order: 2;
+    }
+}
+
 .bp-supply-board-achievements {
     display: flex;
     flex-direction: row;
@@ -907,7 +922,7 @@ body {
     margin-right: 10px;
     background-image: url("img/bp/icons.jpg");
     image-rendering: -webkit-optimize-contrast;
-    background-size: calc(160px * 2 / var(--bp-zoom-factor)) calc(40px * 2 / var(--bp-zoom-factor));
+    background-size: calc(200px * 2 / var(--bp-zoom-factor)) calc(40px * 2 / var(--bp-zoom-factor));
 
     #generalactions & {
         display: inline-block;
@@ -962,6 +977,11 @@ body {
 .bp-icon-park {
     @extend %bp-icon;
     background-position: calc(-120px * 2 / var(--bp-zoom-factor)) 0px;
+}
+
+.bp-icon-shape-souvenir-shop-base {
+    @extend %bp-icon;
+    background-position: calc(-160px * 2 / var(--bp-zoom-factor)) 0px;
 }
 
 .bp-player-area-parks {
@@ -1071,7 +1091,8 @@ body {
 }
 
 .bp-show-shape-grid .bp-shape-supply-board .bp-shape .bp-grid-event,
-.bp-show-shape-grid .bp-player-area-supply .bp-shape .bp-grid-event {
+.bp-show-shape-grid .bp-player-area-supply .bp-shape .bp-grid-event,
+.bp-show-shape-grid #bp-supply-board-souvenir-shop .bp-shape .bp-grid-event {
     border: 1px purple solid;
 }
 
@@ -1440,6 +1461,12 @@ body {
 @include mixin-shape(4315, 80, 240, -710, -730, 4, 1220, 1080);
 @include mixin-shape(4312, 80, 240, -810, -730, 4, 1220, 1080);
 @include mixin-shape(4314, 80, 240, -910, -730, 4, 1220, 1080);
+
+// Shapes 5
+@include mixin-shape(5001, 320, 80, -10, -310, 5, 340, 400);
+@include mixin-shape(5002, 240, 80, -10, -210, 5, 340, 400);
+@include mixin-shape(5003, 160, 80, -10, -110, 5, 340, 400);
+@include mixin-shape(5004, 80, 80, -10, -10, 5, 340, 400);
 
 // Achievements
 

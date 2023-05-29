@@ -23,15 +23,21 @@ define([
                 this.transitionEndCallbacks = [];
             },
 
-            addElement(element) {
+            addElement(element, maxDelay = 600) {
                 const index = this.transitionEndIndex++;
                 this.transitionEndSet.add(index);
+                let called = false;
                 const callback = () => {
+                    if (called) {
+                        return;
+                    }
+                    called = true;
                     element.removeEventListener('transitionend', callback);
                     this.transitionEndSet.delete(index);
                     this.onTransitionEnd();
                 };
                 element.addEventListener('transitionend', callback);
+                setTimeout(callback, maxDelay);
             },
 
             onTransitionEnd() {

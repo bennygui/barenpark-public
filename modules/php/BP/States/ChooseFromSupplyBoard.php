@@ -53,7 +53,7 @@ trait GameStatesTrait
             ],
             'choosableShapeIds' => $choosableShapeIds,
             'choosableParkIds' => $choosableParkIds,
-            'choosableIcons' => $choosableIcons, 
+            'choosableIcons' => $choosableIcons,
         ];
     }
 
@@ -65,7 +65,7 @@ trait GameStatesTrait
 
         $this->commonChooseShapeFromSupplyBoard($playerId, $shapeId);
     }
-    
+
     public function changeChooseShapeFromSupplyBoard(int $shapeId)
     {
         $playerId = $this->getCurrentPlayerId();
@@ -143,6 +143,20 @@ trait GameStatesTrait
 
         foreach ($chooseFromSupplyActions as $action) {
             $shape = $action->getShape();
+            // Match Souvenir shops
+            if (is_subclass_of(get_class($shape), \BP\ShapeSouvenirShopBase::class)) {
+                $found = false;
+                foreach ($icons as $iconsIdx => $icon) {
+                    if ($icon == \BP\Park::class) {
+                        $found = true;
+                        unset($icons[$iconsIdx]);
+                        break;
+                    }
+                }
+                if (!$found)
+                    throw new \BgaSystemException("shapeId {$shape->shapeId} is not in the choosable shapes");
+                continue;
+            }
             $choosableShapesForIcons = [];
             foreach ($icons as $iconsIdx => $icon) {
                 $choosableShapesForIcons[$iconsIdx] = $icon::getChoosableShapes();
@@ -185,20 +199,29 @@ trait GameStatesTrait
             if (!$found)
                 throw new \BgaSystemException("parkId {$action->parkId()} cannot be matched in overlapped icons");
         }
-        
+
         // Cannot take shapes if there are none
         if (!\BX\Action\ActionRowMgrRegister::getMgr('shape')->supplyBoardHasShapes()) {
-            $icons = array_filter($icons, fn($icon) => $icon == \BP\Park::class);
+            $icons = array_filter($icons, fn ($icon) => $icon == \BP\Park::class);
         }
 
         // Cannot take green shapes if there are none
         if (!\BX\Action\ActionRowMgrRegister::getMgr('shape')->supplyBoardHasGreenShapes()) {
-            $icons = array_filter($icons, fn($icon) => $icon != \BP\ShapeGreenBase::class);
+            $icons = array_filter($icons, fn ($icon) => $icon != \BP\ShapeGreenBase::class);
         }
 
         // Cannot take parks if you have the maximum number of parks, even if you overlap a park icon
-        if (\BX\Action\ActionRowMgrRegister::getMgr('park')->playerHasMaximumParks($playerId)) {
-            $icons = array_filter($icons, fn($icon) => $icon != \BP\Park::class);
+        if (\BX\Action\ActionRowMgrRegister::getMgr('shape')->gameUsesSouvenirShops()) {
+            $remainParks = \BX\Action\ActionRowMgrRegister::getMgr('park')->playerGetRemainingToMaximumParks($playerId);
+            $countCoveredParkIcons = count(array_filter($icons, fn ($icon) => $icon == \BP\Park::class));
+            if ($countCoveredParkIcons > 0 && $remainParks - $countCoveredParkIcons < 0) {
+                $icons = array_filter($icons, fn ($icon) => $icon != \BP\Park::class);
+                $icons[] = \BP\ShapeSouvenirShopBase::class;
+            }
+        } else {
+            if (\BX\Action\ActionRowMgrRegister::getMgr('park')->playerHasMaximumParks($playerId)) {
+                $icons = array_filter($icons, fn ($icon) => $icon != \BP\Park::class);
+            }
         }
 
         return array_values($icons);

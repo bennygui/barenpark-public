@@ -1221,6 +1221,11 @@ class ParkMgr extends \BX\Action\BaseActionRowMgr
         return (count($this->getPlayerParks($playerId)) >= PLAYER_MAXIMUM_NUMBER_OF_PARKS);
     }
 
+    public function playerGetRemainingToMaximumParks(int $playerId)
+    {
+        return (PLAYER_MAXIMUM_NUMBER_OF_PARKS - count($this->getPlayerParks($playerId)));
+    }
+
     public function playerParksAreFull(int $playerId)
     {
         return ($this->playerHasMaximumParks($playerId)

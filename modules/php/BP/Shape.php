@@ -655,6 +655,115 @@ class ShapeOrangeEnclosureKoala8 extends ShapeOrangeEnclosureKoalaBase
     }
 }
 
+abstract class ShapeSouvenirShopBase extends ShapeBase
+{
+    public const GENERATE_SHAPE_ID_START = 5000;
+
+    public function generateShapeId()
+    {
+        return self::GENERATE_SHAPE_ID_START + $this->shapeScore;
+    }
+
+    public static function getIconPriority()
+    {
+        return 3;
+    }
+
+    public static function toUIString()
+    {
+        return 'X';
+    }
+
+    public static function getTextPlural()
+    {
+        return clienttranslate('Souvenir Shop(s)');
+    }
+
+    public function getShapeNameText()
+    {
+        return clienttranslate('Souvenir Shop');
+    }
+
+    public static function getChoosableShapes()
+    {
+        return [
+            ShapeSouvenirShopBase::class,
+        ];
+    }
+}
+
+class ShapeSouvenirShop4 extends ShapeSouvenirShopBase
+{
+    public const SHAPE_PER_PLAYER = [
+        2 => 1,
+        3 => 1,
+        4 => 1,
+    ];
+    public const SHAPE_ARRAY = [
+        [1, 1, 1, 1],
+    ];
+
+    public function __construct()
+    {
+        parent::__construct();
+        $this->shapeScore = 1;
+    }
+}
+
+class ShapeSouvenirShop3 extends ShapeSouvenirShopBase
+{
+    public const SHAPE_PER_PLAYER = [
+        2 => 1,
+        3 => 1,
+        4 => 1,
+    ];
+    public const SHAPE_ARRAY = [
+        [1, 1, 1],
+    ];
+
+    public function __construct()
+    {
+        parent::__construct();
+        $this->shapeScore = 2;
+    }
+}
+
+class ShapeSouvenirShop2 extends ShapeSouvenirShopBase
+{
+    public const SHAPE_PER_PLAYER = [
+        2 => 1,
+        3 => 1,
+        4 => 1,
+    ];
+    public const SHAPE_ARRAY = [
+        [1, 1],
+    ];
+
+    public function __construct()
+    {
+        parent::__construct();
+        $this->shapeScore = 3;
+    }
+}
+
+class ShapeSouvenirShop1 extends ShapeSouvenirShopBase
+{
+    public const SHAPE_PER_PLAYER = [
+        2 => 1,
+        3 => 1,
+        4 => 1,
+    ];
+    public const SHAPE_ARRAY = [
+        [1],
+    ];
+
+    public function __construct()
+    {
+        parent::__construct();
+        $this->shapeScore = 4;
+    }
+}
+
 class ShapesCount extends \BX\UI\UISerializable
 {
     public $classId;
@@ -710,6 +819,10 @@ class ShapeMgr extends \BX\Action\BaseActionRowMgr
         ShapeOrangeEnclosureKoala6::class,
         ShapeOrangeEnclosureKoala7::class,
         ShapeOrangeEnclosureKoala8::class,
+        ShapeSouvenirShop4::class,
+        ShapeSouvenirShop3::class,
+        ShapeSouvenirShop2::class,
+        ShapeSouvenirShop1::class,
     ];
     private const BASE_NEW_SHAPE_ID = 10000;
 
@@ -718,10 +831,13 @@ class ShapeMgr extends \BX\Action\BaseActionRowMgr
         parent::__construct('shape', \BP\ShapeBase::class);
     }
 
-    public function setup(array $playerIdArray)
+    public function setup(array $playerIdArray, bool $gameUsesSouvenirShops)
     {
         $playerCount = count($playerIdArray);
         foreach (self::ALL_SHAPE_CLASS_IDS as $classId) {
+            if (!$gameUsesSouvenirShops && is_subclass_of($classId, \BP\ShapeSouvenirShopBase::class)) {
+                continue;
+            }
             if (is_numeric($classId::SHAPE_PER_PLAYER)) {
                 for ($i = 0; $i < $classId::SHAPE_PER_PLAYER; ++$i) {
                     $s = $this->db->newRow($classId);
@@ -786,6 +902,11 @@ class ShapeMgr extends \BX\Action\BaseActionRowMgr
     public function isGeneratedShapeId(int $shapeId)
     {
         return ($shapeId >= self::BASE_NEW_SHAPE_ID);
+    }
+
+    public function gameUsesSouvenirShops()
+    {
+        return count(array_filter($this->getAll(), fn ($shape) => is_subclass_of(get_class($shape), \BP\ShapeSouvenirShopBase::class))) > 0;
     }
 
     public function supplyBoardHasShapes()

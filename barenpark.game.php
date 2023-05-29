@@ -78,6 +78,7 @@ class barenpark extends Table
             GAME_OPTION_ACHIEVEMENT => GAME_OPTION_ACHIEVEMENT_ID,
             GAME_OPTION_VARIANT_PIT => GAME_OPTION_VARIANT_PIT_ID,
             GAME_OPTION_HIDE_SCORE => GAME_OPTION_HIDE_SCORE_ID,
+            GAME_OPTION_SOUVENIRSHOP => GAME_OPTION_SOUVENIRSHOP_ID,
         ]);
     }
 
@@ -114,6 +115,7 @@ class barenpark extends Table
         //self::initStat( 'player', 'player_teststat1', 0 );  // Init a player statistics (for all players)
 
         $gameUsesAchievements = ($this->getGameStateValue(GAME_OPTION_ACHIEVEMENT) == GAME_OPTION_ACHIEVEMENT_VALUE_ON);
+        $gameUsesSouvenirShops = ($this->getGameStateValue(GAME_OPTION_SOUVENIRSHOP) == GAME_OPTION_SOUVENIRSHOP_VALUE_ON);
 
         $playersInfos = $this->loadPlayersBasicInfos();
         $playerIdArray = array_keys($playersInfos);
@@ -121,7 +123,7 @@ class barenpark extends Table
             return ($playersInfos[$p1]['player_no'] <=> $playersInfos[$p2]['player_no']);
         });
         \BX\Action\ActionRowMgrRegister::getMgr('private_state')->setup($playerIdArray);
-        \BX\Action\ActionRowMgrRegister::getMgr('shape')->setup($playerIdArray);
+        \BX\Action\ActionRowMgrRegister::getMgr('shape')->setup($playerIdArray, $gameUsesSouvenirShops);
         \BX\Action\ActionRowMgrRegister::getMgr('park')->setup($playerIdArray);
         \BX\Action\ActionRowMgrRegister::getMgr('achievement')->setup($gameUsesAchievements, $playerIdArray);
 
