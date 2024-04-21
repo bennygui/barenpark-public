@@ -22,7 +22,7 @@ trait GameStatesTrait
         $playerId = $this->getCurrentPlayerId();
         \BX\Action\ActionCommandMgr::apply($playerId);
         $this->privateStateCheckAction($playerId, 'confirmTurn', \BX\PrivateState\PLAYER_ACTIVE_STATUS_ACTIVE);
-        $this->validatePlayerCanEndTurn($playerId);
+        $this->validateNextPlayerAction($playerId);
 
         // Undo other players actions
         $reevalArgs = \BX\Action\ActionCommandMgr::getReevaluationArgs($playerId);
@@ -51,7 +51,7 @@ trait GameStatesTrait
         }
         \BX\Action\ActionCommandMgr::clear();
 
-        $this->validatePlayerCanEndTurn($playerId);
+        $this->validateNextPlayerAction($playerId);
         $this->gamestate->nextState('nextPlayer');
     }
 
@@ -60,17 +60,17 @@ trait GameStatesTrait
         $playerId = $this->getCurrentPlayerId();
         \BX\Action\ActionCommandMgr::apply($playerId);
         $this->privateStateCheckAction($playerId, 'passTurn', \BX\PrivateState\PLAYER_ACTIVE_STATUS_ACTIVE);
-        $this->validatePlayerCanEndTurn($playerId);
+        $this->validateNextPlayerAction($playerId);
 
         $this->updateLastMove($playerId);
         \BX\Action\ActionRowMgrRegister::getMgr('private_state')->clearPlayerState($playerId);
         $this->giveExtraTime($playerId);
 
-        $this->validatePlayerCanEndTurn($playerId);
+        $this->validateNextPlayerAction($playerId);
         $this->gamestate->nextState('nextPlayer');
     }
 
-    private function validatePlayerCanEndTurn($playerId)
+    private function validateNextPlayerAction($playerId)
     {
         if ($playerId != $this->getActivePlayerId()) {
             throw new \BgaUserException(clienttranslate("This action is not possible because it's not your turn"));
