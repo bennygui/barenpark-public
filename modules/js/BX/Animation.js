@@ -186,6 +186,16 @@ define([
                 if (typeof relation == 'undefined') {
                     relation = 'last';
                 }
+                const boundingClientRectZoomScale = this.getBoundingClientRectZoomScale(new_parent);
+                let zoom = this.interface_autoscale === true ? (this.gameinterface_zoomFactor || 1) : 1;
+                if (zoom < 1 && boundingClientRectZoomScale == 1) {
+                    // in case the browser doesn't handle correctly the zoom scale on dojo.position, we consider the zoom is not set
+                    zoom = 1;
+                }
+                if (zoom <= 0) {
+                    zoom = 1;
+                }
+
                 var src = dojo.position(mobile);
                 dojo.style(mobile, 'position', 'absolute');
                 dojo.place(mobile, new_parent, relation);
@@ -194,7 +204,7 @@ define([
                 var cbox = dojo.contentBox(mobile);
                 var left = box.l + src.x - tgt.x;
                 var top = box.t + src.y - tgt.y;
-                this.positionObjectDirectly(mobile, left, top);
+                this.positionObjectDirectly(mobile, left / zoom, top / zoom);
                 box.l += box.w - cbox.w;
                 box.t += box.h - cbox.h;
                 return box;
@@ -207,6 +217,23 @@ define([
                     top: y + 'px',
                 });
                 dojo.style(mobileObj, 'left'); // bug? re-compute style
+            },
+            // check the zoom scale applied on an element.
+            // on old browsers (Chrome < 128), the zoom factor isn't applied to dojo.position (=getBoundingClientRect)
+            getBoundingClientRectZoomScale(obj) {
+                const zoom = Math.round((this.interface_autoscale === true ? (this.gameinterface_zoomFactor || 1) : 1) * 1000) / 1000;
+
+                const object = obj ? $(obj) : document.getElementById('page-content');
+                const position = dojo.position(object);
+                if (position.w > 0) {
+                    const zoomScale = Math.round(position.w / object.offsetWidth * 1000) / 1000;
+                    return zoomScale > zoom ? 1 : zoomScale;
+                } else if (position.h > 0) {
+                    const zoomScale = Math.round(position.h / object.offsetHeight * 1000) / 1000;
+                    return zoomScale > zoom ? 1 : zoomScale;
+                } else {
+                    return 1;
+                }
             },
             /*
              * Wrap a node inside a flip container to trigger a flip animation before replacing with another node

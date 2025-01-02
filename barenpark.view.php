@@ -42,16 +42,20 @@ class view_barenpark_barenpark extends game_view
         "PLAYER_ID" => $playerId,
         "PLAYER_NAME" => $playerInfo['player_name'],
         "PLAYER_COLOR" => $playerInfo['player_color'],
-        "TRY_MODE_TITLE" => $this->_('Try mode'),
-        "PREPARE_MODE_TITLE" => $this->_('Prepare mode'),
-        "HAS_UNDO_ACTION_TITLE" => $this->_('Part of your prepared turn was undone'),
+        "TRY_MODE_TITLE" => self::_('Try mode'),
+        "PREPARE_MODE_TITLE" => self::_('Prepare mode'),
+        "HAS_UNDO_ACTION_TITLE" => self::_('Part of your prepared turn was undone'),
       ]
     );
   }
 
   public function build_page($viewArgs)
   {
-    $this->tpl['DISPLAY_LAST_TURN'] = $this->_('This is the last turn!');
+    if (\BX\BGAGlobal\GlobalMgr::getGlobal(GAME_OPTION_VARIANT_PIT_ID) == GAME_OPTION_VARIANT_PIT_VALUE_ON) {
+      $this->tpl['DISPLAY_LAST_TURN'] = self::_('This is the last turn! You can place a tile overlapping a Pit since the "Pit Variant" is active.');
+    } else {
+      $this->tpl['DISPLAY_LAST_TURN'] = self::_('This is the last turn!');
+    }
 
     $currentPlayerId = $this->game->currentPlayerId();
     $playersInfos = $this->game->loadPlayersBasicInfos();
